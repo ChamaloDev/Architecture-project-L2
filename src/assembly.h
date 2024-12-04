@@ -41,16 +41,16 @@ typedef struct assemblyLine {
     short  number;       // Line number of the instruction
     char  *label;        // Optionnal label for the line
     char  *instruction;  // Instruction
-    short  data;         // Data given to the instruction
+    char  *data;         // Data given to the instruction
 } assemblyLine;
 
 
 // Read a line of assembly code
-assemblyLine *readAssemblyLine(short number, char lines[MAX_ASSEMBLY_LINES][ASSEMBLY_LINE_MAX_SIZE]);
+assemblyLine *readAssemblyLine(short number, char lines[MAX_ASSEMBLY_LINES][ASSEMBLY_LINE_MAX_SIZE+1]);
 
 
 // Read an "assembly language" file and return a list of all the lines
-assemblyLine **readAssemblyFile(FILE *f);
+assemblyLine **readAssemblyFile(FILE *inputFile);
 
 
 // Assemble "assembly language" into "machine language"

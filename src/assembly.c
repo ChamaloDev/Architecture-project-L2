@@ -28,6 +28,7 @@ int isStringANumber(char *str) {
 
 
 short stringToShort(char *str) {
+    if (!(str)) return 0;
     // If this is a signed number
     int sign = (str[0] == '-') ? -1 : +1;
     if (str[0] == '+' || str[0] == '-') str++;
@@ -40,17 +41,18 @@ short stringToShort(char *str) {
 
 
 int isBlankString(char *str) {
+    if (!(str)) return 1;
     while (str[0]) if (!(isspace((str++)[0]))) return 0;
     return 1;
 }
 
 
-assemblyLine *readAssemblyLine(short number, char lines[MAX_ASSEMBLY_LINES][ASSEMBLY_LINE_MAX_SIZE]) {
+assemblyLine *readAssemblyLine(short number, char lines[MAX_ASSEMBLY_LINES][ASSEMBLY_LINE_MAX_SIZE+1]) {
     assemblyLine *l = malloc(sizeof(assemblyLine));
     l->number       = number+1;
     l->label        = NULL;
     l->instruction  = NULL;
-    l->data         = 0;
+    l->data         = NULL;
 
     // Reading the assembly line
     // To do so, it is splited into a array of string, ignores whitespaces
@@ -92,37 +94,25 @@ assemblyLine *readAssemblyLine(short number, char lines[MAX_ASSEMBLY_LINES][ASSE
     }
     // 2 words were read (label, instruction OR instruction, data)
     else if (i == 2) {
-        /*
-            TODO!
-            Add a check to see if the label only contains 'A-Z', 'a-z', '0-9' and '_'
-            First character should be in 'A-Z' or 'a-z'
-        */
         // label, instruction
         if (tmpArray[0][strlen(tmpArray[0]) - 1] == ':') {
             tmpArray[0][strlen(tmpArray[0]) - 1] = '\0';
+            /*
+                TODO!
+                Add a check to see if the label only contains 'A-Z', 'a-z', '0-9' and '_'
+                First character should be in 'A-Z' or 'a-z'
+            */
             l->label        = tmpArray[0];
             l->instruction  = tmpArray[1];
         }
         // instruction, data
         else {
-            // Check if the string representing the data is a number, if not abort process
-            if (!(isStringANumber(tmpArray[1]))) {
-                printf("ERROR: INVALID NUMBER\n");
-                printf("       String \"%s\" cannot be interpreted as a number\n", tmpArray[1]);
-                for (int v = 0; v < 2; v++) free(tmpArray[v]);
-                return NULL;
-            }
             l->instruction  = tmpArray[0];
-            l->data         = stringToShort(tmpArray[1]);
+            l->data         = tmpArray[1];
         }
     }
     // 3 words were read (label, instruction, data)
     else if (i == 3) {
-        /*
-            TODO!
-            Add a check to see if the label only contains 'A-Z', 'a-z', '0-9' and '_'
-            First character should be in 'A-Z' or 'a-z'
-        */
         // Check if the string representing the label ends with ':', if not abort process
         if (tmpArray[0][strlen(tmpArray[0]) - 1] != ':') {
             printf("ERROR: INVALID LABEL\n");
@@ -130,41 +120,55 @@ assemblyLine *readAssemblyLine(short number, char lines[MAX_ASSEMBLY_LINES][ASSE
             for (int v = 0; v < 3; v++) free(tmpArray[v]);
             return NULL;
         }
-        // Check if the string representing the data is a number, if not abort process
-        if (!(isStringANumber(tmpArray[2]))) {
-            printf("ERROR: INVALID NUMBER\n");
-            printf("       String \"%s\" cannot be interpreted as a number\n", tmpArray[2]);
-            for (int v = 0; v < 3; v++) free(tmpArray[v]);
-            return NULL;
-        }
+        /*
+            TODO!
+            Add a check to see if the label only contains 'A-Z', 'a-z', '0-9' and '_'
+            First character should be in 'A-Z' or 'a-z'
+        */
         tmpArray[0][strlen(tmpArray[0]) - 1] = '\0';
         l->label        = tmpArray[0];
         l->instruction  = tmpArray[1];
-        l->data         = stringToShort(tmpArray[2]);
+        l->data         = tmpArray[2];
     }
 
     return l;
 }
 
 
-assemblyLine **readAssemblyFile(FILE *f) {
+assemblyLine **readAssemblyFile(FILE *inputFile) {
     // If no input file is given, abort the process
-    if (!(f)) {
+    if (!(inputFile)) {
         printf("ERROR: MISSING FILE\n");
         printf("       No input file was given\n");
         return NULL;
     }
 
     // Read file content
-    char lines[MAX_ASSEMBLY_LINES][ASSEMBLY_LINE_MAX_SIZE];
+    char lines[MAX_ASSEMBLY_LINES][ASSEMBLY_LINE_MAX_SIZE+1];
+    char buffer[ASSEMBLY_LINE_MAX_SIZE+2];  // Buffer used for the assembly line
     int nbLines = 0;
-    rewind(f);  // Set cursor at the start of the file
-    while (fgets(lines[nbLines], ASSEMBLY_LINE_MAX_SIZE * sizeof(char), f)) {
+    rewind(inputFile);  // Set cursor at the start of the file
+    while (fgets(buffer, (ASSEMBLY_LINE_MAX_SIZE+2) * sizeof(char), inputFile)) {
         // Replace the first occurence of '\n' by '\0'
-        char *p = strchr(lines[nbLines], '\n');
+        char *p = strchr(buffer, '\n');
         if (p) *p = '\0';
+        // Check if the line is too long or not
+        if (strnlen(buffer, ASSEMBLY_LINE_MAX_SIZE+2) > ASSEMBLY_LINE_MAX_SIZE) {
+            printf("ERROR: ASSEMBLY LINE MAXIMUM SIZE REACHED\n");
+            printf("       Limit of %d characters in assembly line %d has been reached\n", ASSEMBLY_LINE_MAX_SIZE, nbLines+1);
+            return NULL;
+        }
         // Only count not empty lines
-        if (!(isBlankString(lines[nbLines]))) nbLines++;
+        if (!(isBlankString(buffer))) {
+            // Error if max line amount is reached
+            if (nbLines >= MAX_ASSEMBLY_LINES) {
+                printf("ERROR: MAXIMUM ASSEMBLY LINE COUNT REACHED\n");
+                printf("       Limit of %d assembly lines has been reached\n", MAX_ASSEMBLY_LINES);
+                return NULL;
+            }
+            strncpy(lines[nbLines], buffer, ASSEMBLY_LINE_MAX_SIZE+1);  // Paste the content of the buffer into its desired location
+            nbLines++;
+        }
     }
 
     // Convert lines into assemblyLine
@@ -180,6 +184,7 @@ assemblyLine **readAssemblyFile(FILE *f) {
             for (int j = i-1; j >= 0; j--) {
                 free(assemblyLines[j]->label);
                 free(assemblyLines[j]->instruction);
+                free(assemblyLines[j]->data);
                 free(assemblyLines[j]);
             }
             free(assemblyLines);
@@ -228,7 +233,9 @@ int assemble(char *inputPath, char *outputPath) {
         else                         fprintf(outputFile, "Line label:\n");
         if (assemblyLines[i]->instruction) fprintf(outputFile, "Line instruction: \"%s\"\n", assemblyLines[i]->instruction);
         else                               fprintf(outputFile, "Line instruction:\n");
-        fprintf(outputFile, "Line data:        %d\n", assemblyLines[i]->data);
+        if (!(assemblyLines[i]->data))                    fprintf(outputFile, "Line data:\n");
+        else if (isStringANumber(assemblyLines[i]->data)) fprintf(outputFile, "Line data:        %d\n", stringToShort(assemblyLines[i]->data));
+        else                                              fprintf(outputFile, "Line data:        \"%s\"\n", assemblyLines[i]->data);
         fprintf(outputFile, "\n");
     }
     /*
