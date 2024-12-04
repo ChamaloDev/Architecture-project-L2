@@ -10,6 +10,20 @@
 #define SIMULATOR_H_
 
 
+
+
+// Process memory
+typedef struct memoryRegistry
+{
+    short *registry;  // Registries
+    short  sp;        // Top of the pile
+} memoryRegistry;
+
+
+// Create a new memory space
+memoryRegistry *newMemoryRegistry();
+
+
 // TODO!
 
 
