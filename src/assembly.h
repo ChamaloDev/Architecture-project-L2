@@ -24,7 +24,7 @@
 // Return if the string represent a number
 // All string characters must all be between '0' and '9'
 // except for the first one that can also be eather '-' or '+'
-int isStringNumber(char *str);
+int isStringANumber(char *str);
 
 
 // Convert a string into a short

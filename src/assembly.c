@@ -15,7 +15,7 @@
 
 
 
-int isStringNumber(char *str) {
+int isStringANumber(char *str) {
     // Missing string are not numbers
     if (!(str)) return 0;
     // If this is a signed number, remove the sign
@@ -59,7 +59,7 @@ assemblyLine *readAssemblyLine(short number, char lines[MAX_ASSEMBLY_LINES][ASSE
     // While the line has not been fully read (including the '\0' character)
     while (j == 0 || lines[number][j-1]) {
         // When a whitespace (here, only '\0' and ' ') character is found
-        if (!(lines[number][j]) || lines[number][j] == ' ') {
+        if (isspace(lines[number][j])) {
             // If the word isn't empty
             if (j != k) {
                 // tmpArray cannot contain more than 3 strings, otherwise abort process
@@ -88,7 +88,7 @@ assemblyLine *readAssemblyLine(short number, char lines[MAX_ASSEMBLY_LINES][ASSE
     }
     // 1 word was read (only an instruction)
     else if (i == 1) {
-        l->label = tmpArray[0];
+        l->instruction = tmpArray[0];
     }
     // 2 words were read (label, instruction OR instruction, data)
     else if (i == 2) {
@@ -106,7 +106,7 @@ assemblyLine *readAssemblyLine(short number, char lines[MAX_ASSEMBLY_LINES][ASSE
         // instruction, data
         else {
             // Check if the string representing the data is a number, if not abort process
-            if (!(isStringNumber(tmpArray[1]))) {
+            if (!(isStringANumber(tmpArray[1]))) {
                 printf("ERROR: INVALID NUMBER\n");
                 printf("       String \"%s\" cannot be interpreted as a number\n", tmpArray[1]);
                 for (int v = 0; v < 2; v++) free(tmpArray[v]);
@@ -131,7 +131,7 @@ assemblyLine *readAssemblyLine(short number, char lines[MAX_ASSEMBLY_LINES][ASSE
             return NULL;
         }
         // Check if the string representing the data is a number, if not abort process
-        if (!(isStringNumber(tmpArray[2]))) {
+        if (!(isStringANumber(tmpArray[2]))) {
             printf("ERROR: INVALID NUMBER\n");
             printf("       String \"%s\" cannot be interpreted as a number\n", tmpArray[2]);
             for (int v = 0; v < 3; v++) free(tmpArray[v]);
