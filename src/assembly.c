@@ -59,7 +59,7 @@ assemblyLine *readAssemblyLine(short number, char lines[MAX_ASSEMBLY_LINES][ASSE
     // While the line has not been fully read (including the '\0' character)
     while (j == 0 || lines[number][j-1]) {
         // When a whitespace (here, only '\0' and ' ') character is found
-        if (isspace(lines[number][j])) {
+        if (!(lines[number][j]) || isspace(lines[number][j])) {
             // If the word isn't empty
             if (j != k) {
                 // tmpArray cannot contain more than 3 strings, otherwise abort process
