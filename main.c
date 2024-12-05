@@ -37,7 +37,8 @@ int main(int argCount, char **argValue) {
     char *outputPath = (argCount == 2) ? argValue[1] : "hexa.txt";
     // Assembling instructions, abort process if unsuccessful in doing so
     if (!(assemble(inputPath, outputPath))) {
-        printf("INFO:  Unable to generate output file\n");
+        printf("ERROR: COMPILATION ERROR\n");
+        printf("       Unable to compile assembly file \"%s\"\n", inputPath);
         printf("INFO:  Process FAILLED to complete\n");
         return 1;
     }

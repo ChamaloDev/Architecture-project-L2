@@ -6,8 +6,8 @@
 */
 
 
-#ifndef SIMULATOR_H_
-#define SIMULATOR_H_
+#ifndef SIMULATOR_H
+#define SIMULATOR_H
 
 
 
@@ -27,4 +27,4 @@ memoryRegistry *newMemoryRegistry();
 // TODO!
 
 
-#endif // SIMULATOR_H_
+#endif // SIMULATOR_H
