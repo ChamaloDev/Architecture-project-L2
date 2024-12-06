@@ -174,8 +174,12 @@ assemblyLine **readAssemblyFile(FILE *inputFile) {
     int nbLines = 0;
     rewind(inputFile);  // Set cursor at the start of the file
     while (fgets(buffer, (ASSEMBLY_LINE_MAX_SIZE+2) * sizeof(char), inputFile)) {
+    	char *p = NULL;
+    	// Ignore comments (text after the '/' character)
+    	p = strchr(buffer, '/');
+        if (p) *p = '\0';
         // Replace the first occurence of '\n' by '\0'
-        char *p = strchr(buffer, '\n');
+        p = strchr(buffer, '\n');
         if (p) *p = '\0';
         // Check if the line is too long or not
         if (strnlen(buffer, ASSEMBLY_LINE_MAX_SIZE+2) > ASSEMBLY_LINE_MAX_SIZE) {
