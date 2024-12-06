@@ -172,29 +172,32 @@ assemblyLine **readAssemblyFile(FILE *inputFile) {
     long long      line_max_size  = 32;
     // Array of *assemblyLine (last one being the NULL value)
     assemblyLine **assemblyLines  = malloc((max_line_count+1) * sizeof(assemblyLine *));
-    char          *line           = malloc((line_max_size+2)  * sizeof(char));
+    char          *line           = malloc((line_max_size+1)  * sizeof(char));
     long long      nbLines        = 0;
     // Set cursor at the start of the file
     rewind(inputFile);
     // Read file content and convert it into assembly lines
-    while (fgets(line, line_max_size+2, inputFile)) {
+    while (fgets(line, line_max_size+1, inputFile)) {
     	char *p = NULL;
-    	// Ignore comments (text after the '/' character)
-    	p = strchr(line, '/');
-        if (p) *p = '\0';
-        // Replace the first occurence of '\n' by '\0'
-        p = strchr(line, '\n');
-        if (p) *p = '\0';
         // If more memory is needed
-        else if (strlen(line) >= line_max_size+1) {
+        if (strlen(line) >= line_max_size) {
             // Try reading again the same line by setting the cursor back to the start of the line
-            fseek(inputFile, -(line_max_size+1), SEEK_CUR);
+            fseek(inputFile, -(line_max_size), SEEK_CUR);
             // Extend line buffer size
             line_max_size *= 2;
-            line = realloc(line, (line_max_size+2) * sizeof(char));
+            line = realloc(line, (line_max_size+1) * sizeof(char));
             // Go back to the start of the loop to try and read the line again
             continue;
         }
+
+        // Replace the first occurence of '\n' by '\0'
+        p = strchr(line, '\n');
+        if (p) *p = '\0';
+        // Ignore comments (text after the '/' character)
+        // This step MUST be done AFTER memory reallocation check
+    	p = strchr(line, '/');
+        if (p) *p = '\0';
+
         // Only count not empty lines
         if (!(isBlankString(line))) {
             // Check if the line was read correctly (if not return value is NULL)
