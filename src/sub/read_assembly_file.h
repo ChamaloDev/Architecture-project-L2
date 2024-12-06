@@ -15,8 +15,6 @@
 
 
 #include <stdio.h>
-#define ASSEMBLY_LINE_MAX_SIZE 32
-#define MAX_ASSEMBLY_LINES 1024
 
 
 
@@ -51,7 +49,7 @@ typedef struct assemblyLine {
 
 
 // Read a line of assembly code
-assemblyLine *readAssemblyLine(short number, char lines[MAX_ASSEMBLY_LINES][ASSEMBLY_LINE_MAX_SIZE+1]);
+assemblyLine *readAssemblyLine(short number, char *line);
 
 
 // Read an "assembly language" file and return a list of all the lines

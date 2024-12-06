@@ -54,7 +54,7 @@ int isValidLabelName(char *str) {
 }
 
 
-assemblyLine *readAssemblyLine(short number, char lines[MAX_ASSEMBLY_LINES][ASSEMBLY_LINE_MAX_SIZE+1]) {
+assemblyLine *readAssemblyLine(short number, char *line) {
     assemblyLine *l = malloc(sizeof(assemblyLine));
     l->number       = number+1;
     l->label        = NULL;
@@ -66,9 +66,9 @@ assemblyLine *readAssemblyLine(short number, char lines[MAX_ASSEMBLY_LINES][ASSE
     char *(tmpArray[3]) = {NULL, NULL, NULL};
     int i = 0, j = 0, k = 0;
     // While the line has not been fully read (including the '\0' character)
-    while (j == 0 || lines[number][j-1]) {
+    while (j == 0 || line[j-1]) {
         // When a whitespace (here, only '\0' and ' ') character is found
-        if (!(lines[number][j]) || isspace(lines[number][j])) {
+        if (!(line[j]) || isspace(line[j])) {
             // If the word isn't empty
             if (j != k) {
                 // tmpArray cannot contain more than 3 strings, otherwise abort process
@@ -80,7 +80,7 @@ assemblyLine *readAssemblyLine(short number, char lines[MAX_ASSEMBLY_LINES][ASSE
                 }
                 // If there is space remaining inside tmpArray
                 tmpArray[i] = malloc((j-k+1) * sizeof(char));
-                for (int v = 0; v < j-k; v++) tmpArray[i][v] = lines[number][v+k];
+                for (int v = 0; v < j-k; v++) tmpArray[i][v] = line[v+k];
                 tmpArray[i][j-k] = '\0';
                 i++;
             }
@@ -168,58 +168,61 @@ assemblyLine **readAssemblyFile(FILE *inputFile) {
         return NULL;
     }
 
-    // Read file content
-    char lines[MAX_ASSEMBLY_LINES][ASSEMBLY_LINE_MAX_SIZE+1];
-    char buffer[ASSEMBLY_LINE_MAX_SIZE+2];  // Buffer used for the assembly line
-    int nbLines = 0;
-    rewind(inputFile);  // Set cursor at the start of the file
-    while (fgets(buffer, (ASSEMBLY_LINE_MAX_SIZE+2) * sizeof(char), inputFile)) {
+    long long      max_line_count = 32;
+    long long      line_max_size  = 32;
+    // Array of *assemblyLine (last one being the NULL value)
+    assemblyLine **assemblyLines  = malloc((max_line_count+1) * sizeof(assemblyLine *));
+    char          *line           = malloc((line_max_size+2)  * sizeof(char));
+    long long      nbLines        = 0;
+    // Set cursor at the start of the file
+    rewind(inputFile);
+    // Read file content and convert it into assembly lines
+    while (fgets(line, line_max_size+2, inputFile)) {
     	char *p = NULL;
     	// Ignore comments (text after the '/' character)
-    	p = strchr(buffer, '/');
+    	p = strchr(line, '/');
         if (p) *p = '\0';
         // Replace the first occurence of '\n' by '\0'
-        p = strchr(buffer, '\n');
+        p = strchr(line, '\n');
         if (p) *p = '\0';
-        // Check if the line is too long or not
-        if (strnlen(buffer, ASSEMBLY_LINE_MAX_SIZE+2) > ASSEMBLY_LINE_MAX_SIZE) {
-            printf("ERROR: MEMORY ERROR\n");
-            printf("       Limit of %d characters per line in assembly line %d has been reached\n", ASSEMBLY_LINE_MAX_SIZE, nbLines+1);
-            return NULL;
+        // If more memory is needed
+        else if (strlen(line) >= line_max_size+1) {
+            // Try reading again the same line by setting the cursor back to the start of the line
+            fseek(inputFile, -(line_max_size+1), SEEK_CUR);
+            // Extend line buffer size
+            line_max_size *= 2;
+            line = realloc(line, (line_max_size+2) * sizeof(char));
+            // Go back to the start of the loop to try and read the line again
+            continue;
         }
         // Only count not empty lines
-        if (!(isBlankString(buffer))) {
-            // Error if max line amount is reached
-            if (nbLines >= MAX_ASSEMBLY_LINES) {
-                printf("ERROR: MEMORY ERROR\n");
-                printf("       Limit of %d assembly lines has been reached\n", MAX_ASSEMBLY_LINES);
+        if (!(isBlankString(line))) {
+            // Check if the line was read correctly (if not return value is NULL)
+            assemblyLines[nbLines] = readAssemblyLine(nbLines, line);
+            if (!(assemblyLines[nbLines])) {
+                printf("ERROR: ASSEMBLY SYNTAX ERROR\n");
+                printf("       Unable to read line %lld\n", nbLines+1);
+                // Free memory
+                for (int j = nbLines-1; j >= 0; j--) {
+                    free(assemblyLines[j]->label);
+                    free(assemblyLines[j]->instruction);
+                    free(assemblyLines[j]->data);
+                    free(assemblyLines[j]);
+                }
+                free(assemblyLines);
                 return NULL;
             }
-            strncpy(lines[nbLines], buffer, ASSEMBLY_LINE_MAX_SIZE+1);  // Paste the content of the buffer into its desired location
+            // Count the line
             nbLines++;
-        }
-    }
-
-    // Convert lines into assemblyLine
-    // Array of <nbLines + 1> *assemblyLine (last one being the NULL value)
-    assemblyLine **assemblyLines = malloc((nbLines+1) * sizeof(assemblyLine));
-    for (int i = 0; i < nbLines; i++) {
-        assemblyLines[i] = readAssemblyLine(i, lines);
-        // Check if the line was read correctly (if not return value is NULL)
-        if (!(assemblyLines[i])) {
-            printf("ERROR: ASSEMBLY SYNTAX ERROR\n");
-            printf("       Unable to read line %d properly\n", i+1);
-            // Free memory
-            for (int j = i-1; j >= 0; j--) {
-                free(assemblyLines[j]->label);
-                free(assemblyLines[j]->instruction);
-                free(assemblyLines[j]->data);
-                free(assemblyLines[j]);
+            // If more memory is needed
+            if (nbLines > max_line_count) {
+                // Extend file buffer size
+                max_line_count *= 2;
+                assemblyLines = realloc(assemblyLines, (max_line_count+1) * sizeof(assemblyLine *));
             }
-            free(assemblyLines);
-            return NULL;
         }
     }
+    // Set the last element to be a NULL pointer
     assemblyLines[nbLines] = NULL;
 
     return assemblyLines;
