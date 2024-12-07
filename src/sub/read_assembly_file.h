@@ -15,19 +15,12 @@
 
 
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
+#include "common.h"
 
 
-
-
-// Return if the string represent a number
-// All string characters must all be between '0' and '9'
-// except for the first one that can also be eather '-' or '+'
-int isValidNumber(char *str);
-
-
-// Convert a string into a short
-// The string is supposed to be representing an actual number
-short stringToShort(char *str);
 
 
 // Return if the string is only made of whitespaces
@@ -39,17 +32,8 @@ int isBlankString(char *str);
 int isValidLabelName(char *str);
 
 
-// Line of assembly code
-typedef struct assemblyLine {
-    short  number;       // Line number of the instruction
-    char  *label;        // Optionnal label for the line
-    char  *instruction;  // Instruction
-    char  *data;         // Data given to the instruction
-} assemblyLine;
-
-
 // Read a line of assembly code
-assemblyLine *readAssemblyLine(short number, char *line);
+assemblyLine *readAssemblyLine(long long number, char *line, long long lineID);
 
 
 // Read an "assembly language" file and return a list of all the lines

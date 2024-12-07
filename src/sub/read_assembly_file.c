@@ -7,37 +7,8 @@
 
 
 #include "read_assembly_file.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <ctype.h>
 
 
-
-
-int isValidNumber(char *str) {
-    // Missing string are not numbers
-    if (!(str)) return 0;
-    // If this is a signed number, remove the sign
-    if (str[0] == '+' || str[0] == '-') str++;
-    int i = 0;
-    for (; '0' <= str[i] && str[i] <= '9'; i++);
-    // There must be at least 1 number, and the last character reached should be '\0'
-    return (i && !(str[i]));
-}
-
-
-short stringToShort(char *str) {
-    if (!(str)) return 0;
-    // If this is a signed number
-    int sign = (str[0] == '-') ? -1 : +1;
-    if (str[0] == '+' || str[0] == '-') str++;
-    // Read the number
-    short value = 0;
-    char c;
-    while ((c = (str++)[0])) value = (10*value) + (c-'0');
-    return sign * value;
-}
 
 
 int isBlankString(char *str) {
@@ -54,12 +25,13 @@ int isValidLabelName(char *str) {
 }
 
 
-assemblyLine *readAssemblyLine(short number, char *line) {
+assemblyLine *readAssemblyLine(long long number, char *line, long long lineID) {
     assemblyLine *l = malloc(sizeof(assemblyLine));
-    l->number       = number+1;
-    l->label        = NULL;
-    l->instruction  = NULL;
-    l->data         = NULL;
+    l->ID          = lineID;
+    l->number      = number+1;
+    l->label       = NULL;
+    l->instruction = NULL;
+    l->parameter   = NULL;
 
     // Reading the assembly line
     // To do so, it is splited into a array of string, ignores whitespaces
@@ -71,10 +43,10 @@ assemblyLine *readAssemblyLine(short number, char *line) {
         if (!(line[j]) || isspace(line[j])) {
             // If the word isn't empty
             if (j != k) {
-                // tmpArray cannot contain more than 3 strings, otherwise abort process
+                // tmpArray cannot contain more than 3 strings, otherwise throw error
                 if (i >= 3) {
                     printf("ERROR: ASSEMBLY SYNTAX ERROR\n");
-                    printf("       Line contains too many elements\n");
+                    printf("       Line %lld contains too many elements\n", l->ID);
                     for (int v = 0; v < 3; v++) free(tmpArray[v]);
                     return NULL;
                 }
@@ -92,7 +64,7 @@ assemblyLine *readAssemblyLine(short number, char *line) {
     // At least 1 word has to be read
     if (i == 0) {
         printf("ERROR: ASSEMBLY SYNTAX ERROR\n");
-        printf("       Empty line\n");
+        printf("       Line %lld is empty\n", l->ID);
         return NULL;
     }
     // 1 word was read (label OR instruction)
@@ -103,7 +75,7 @@ assemblyLine *readAssemblyLine(short number, char *line) {
             tmpArray[0][strlen(tmpArray[0]) - 1] = '\0';
             if (!(isValidLabelName(tmpArray[0]))) {
                 printf("ERROR: INVALID LABEL NAME\n");
-                printf("       String \"%s\" isn't allowed as a label name\n", tmpArray[0]);
+                printf("       On line %lld, name \"%s\" cannot be used as a label\n", l->ID, tmpArray[0]);
                 free(tmpArray[0]);
                 return NULL;
             }
@@ -112,7 +84,7 @@ assemblyLine *readAssemblyLine(short number, char *line) {
         // instruction
         else l->instruction = tmpArray[0];
     }
-    // 2 words were read (label, instruction OR instruction, data)
+    // 2 words were read (label, instruction OR instruction, parameter)
     else if (i == 2) {
         // label, instruction
         if (tmpArray[0][strlen(tmpArray[0]) - 1] == ':') {
@@ -120,25 +92,25 @@ assemblyLine *readAssemblyLine(short number, char *line) {
             // Check the validity of the label name
             if (!(isValidLabelName(tmpArray[0]))) {
                 printf("ERROR: INVALID LABEL NAME\n");
-                printf("       String \"%s\" isn't allowed as a label name\n", tmpArray[0]);
+                printf("       On line %lld, name \"%s\" cannot be used as a label\n", l->ID, tmpArray[0]);
                 for (int v = 0; v < 2; v++) free(tmpArray[v]);
                 return NULL;
             }
-            l->label        = tmpArray[0];
-            l->instruction  = tmpArray[1];
+            l->label       = tmpArray[0];
+            l->instruction = tmpArray[1];
         }
-        // instruction, data
+        // instruction, parameter
         else {
-            l->instruction  = tmpArray[0];
-            l->data         = tmpArray[1];
+            l->instruction = tmpArray[0];
+            l->parameter   = tmpArray[1];
         }
     }
-    // 3 words were read (label, instruction, data)
+    // 3 words were read (label, instruction, parameter)
     else if (i == 3) {
-        // Check if the string representing the label ends with ':', if not abort process
+        // Check if the string representing the label ends with ':', if not throw error
         if (tmpArray[0][strlen(tmpArray[0]) - 1] != ':') {
             printf("ERROR: INVALID LABEL NAME\n");
-            printf("       String \"%s\" must end with ':' to be read as a label\n", tmpArray[0]);
+            printf("       On line %lld, name \"%s\" must end with ':'\n", l->ID, tmpArray[0]);
             for (int v = 0; v < 3; v++) free(tmpArray[v]);
             return NULL;
         }
@@ -147,13 +119,13 @@ assemblyLine *readAssemblyLine(short number, char *line) {
         // Check the validity of the label name
         if (!(isValidLabelName(tmpArray[0]))) {
             printf("ERROR: INVALID LABEL NAME\n");
-            printf("       String \"%s\" isn't allowed as a label name\n", tmpArray[0]);
+            printf("       On line %lld, name \"%s\" cannot be used as a label\n", l->ID, tmpArray[0]);
             for (int v = 0; v < 3; v++) free(tmpArray[v]);
             return NULL;
         }
-        l->label        = tmpArray[0];
-        l->instruction  = tmpArray[1];
-        l->data         = tmpArray[2];
+        l->label       = tmpArray[0];
+        l->instruction = tmpArray[1];
+        l->parameter   = tmpArray[2];
     }
 
     return l;
@@ -161,19 +133,13 @@ assemblyLine *readAssemblyLine(short number, char *line) {
 
 
 assemblyLine **readAssemblyFile(FILE *inputFile) {
-    // If no input file is given, abort the process
-    if (!(inputFile)) {
-        printf("ERROR: MISSING FILE\n");
-        printf("       No input file was given\n");
-        return NULL;
-    }
-
     long long      max_line_count = 32;
     long long      line_max_size  = 32;
     // Array of *assemblyLine (last one being the NULL value)
-    assemblyLine **assemblyLines  = malloc((max_line_count+1) * sizeof(assemblyLine *));
+    assemblyLine **assemblyCode   = malloc((max_line_count+1) * sizeof(assemblyLine *));
     char          *line           = malloc((line_max_size+1)  * sizeof(char));
-    long long      nbLines        = 0;
+    long long      lineNb        = 0;
+    long long      lineID         = 1;
     // Set cursor at the start of the file
     rewind(inputFile);
     // Read file content and convert it into assembly lines
@@ -201,32 +167,32 @@ assemblyLine **readAssemblyFile(FILE *inputFile) {
         // Only count not empty lines
         if (!(isBlankString(line))) {
             // Check if the line was read correctly (if not return value is NULL)
-            assemblyLines[nbLines] = readAssemblyLine(nbLines, line);
-            if (!(assemblyLines[nbLines])) {
-                printf("ERROR: ASSEMBLY SYNTAX ERROR\n");
-                printf("       Unable to read line %lld\n", nbLines+1);
+            assemblyCode[lineNb] = readAssemblyLine(lineNb, line, lineID);
+            if (!(assemblyCode[lineNb])) {
                 // Free memory
-                for (int j = nbLines-1; j >= 0; j--) {
-                    free(assemblyLines[j]->label);
-                    free(assemblyLines[j]->instruction);
-                    free(assemblyLines[j]->data);
-                    free(assemblyLines[j]);
+                for (int j = lineNb-1; j >= 0; j--) {
+                    free(assemblyCode[j]->label);
+                    free(assemblyCode[j]->instruction);
+                    free(assemblyCode[j]->parameter);
+                    free(assemblyCode[j]);
                 }
-                free(assemblyLines);
+                free(assemblyCode);
                 return NULL;
             }
             // Count the line
-            nbLines++;
+            lineNb++;
             // If more memory is needed
-            if (nbLines > max_line_count) {
+            if (lineNb > max_line_count) {
                 // Extend file buffer size
                 max_line_count *= 2;
-                assemblyLines = realloc(assemblyLines, (max_line_count+1) * sizeof(assemblyLine *));
+                assemblyCode = realloc(assemblyCode, (max_line_count+1) * sizeof(assemblyLine *));
             }
         }
+        // No matter what, increase lineID by 1
+        lineID++;
     }
     // Set the last element to be a NULL pointer
-    assemblyLines[nbLines] = NULL;
+    assemblyCode[lineNb] = NULL;
 
-    return assemblyLines;
+    return assemblyCode;
 }

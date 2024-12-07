@@ -11,7 +11,7 @@
 
 
 #include <stdio.h>
-#include "src/assembly.h"
+#include "src/compiler.h"
 #include "src/simulator.h"
 
 
@@ -35,15 +35,16 @@ int main(int argCount, char **argValue) {
 
     char *inputPath  = argValue[0];
     char *outputPath = (argCount == 2) ? argValue[1] : "hexa.txt";
-    // Assembling instructions, abort process if unsuccessful in doing so
+    // Assembling instructions, throw error if unsuccessful in doing so
     if (!(assemble(inputPath, outputPath))) {
-        printf("ERROR: COMPILATION ERROR\n");
-        printf("       Unable to compile assembly file \"%s\"\n", inputPath);
         printf("INFO:  Process FAILLED to complete\n");
         return 1;
     }
 
-    // TODO!
+    /*
+        TODO!
+        Do simulation here
+    */
     printf("INFO:  Process SUCCESSFULLY completed\n");
     return 0;
 }
