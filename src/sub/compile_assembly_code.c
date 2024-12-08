@@ -56,20 +56,20 @@ int hasValidRegistry(assemblyLine *line) {
     // Instruction needs a parameter
     if (!(line->parameter)) {
         printf("ERROR: MISSING PARAMETER\n");
-        printf("       On line %lld, intruction \"%s\" needs a registry (1 - %d) as a parameter\n", line->ID, line->instruction, REGISTRY_SIZE);
+        printf("       On line %lld, intruction \"%s\" needs a registry (0 - %d) as a parameter\n", line->ID, line->instruction, REGISTRY_SIZE-1);
         return 0;
     }
     // Instruction needs a number as a parameter
     if (!(isValidNumber(line->parameter))) {
         printf("ERROR: INVALID PARAMETER\n");
-        printf("       On line %lld, intruction \"%s\" needs a registry (1 - %d) as a parameter, got \"%s\" instead\n", line->ID, line->instruction, REGISTRY_SIZE, line->parameter);
+        printf("       On line %lld, intruction \"%s\" needs a registry (0 - %d) as a parameter, got \"%s\" instead\n", line->ID, line->instruction, REGISTRY_SIZE-1, line->parameter);
         return 0;
     }
-    // Instruction needs a number between 1 and <REGISTRY_SIZE> as a parameter
+    // Instruction needs a number between 0 and <REGISTRY_SIZE-1> as a parameter
     int value = stringToShort(line->parameter);
-    if (1 > value || value > REGISTRY_SIZE) {
+    if (0 > value || value > REGISTRY_SIZE-1) {
         printf("ERROR: INVALID PARAMETER\n");
-        printf("       On line %lld, intruction \"%s\" needs a registry (1 - %d) as a parameter, got %d instead\n", line->ID, line->instruction, REGISTRY_SIZE, value);
+        printf("       On line %lld, intruction \"%s\" needs a registry (0 - %d) as a parameter, got %d instead\n", line->ID, line->instruction, REGISTRY_SIZE-1, value);
         return 0;
     }
     return 1;
