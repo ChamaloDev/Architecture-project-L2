@@ -1,1 +1,1 @@
-gcc main.c src/*.c src/sub/*.c -o simulateur -lm -Wall
+gcc main.c src/*.c src/sub/*.c -o simulateur -Wall
