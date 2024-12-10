@@ -28,12 +28,20 @@
 
 
 
-// Convert a number between 0 and 15 to hexadecimal
-char hexa(int n);
+// Return the maximum between <a> and <b>
+int max(int a, int b);
+
+
+// Append the string <value> at the end of the string <str>
+void appendToString(char *str, char *value);
+
+
+// Convert <number> into an hexadecimal string made of <size> characters
+char *hexadecimal(int value, int size);
 
 
 // Get the associated line in hexadecimal
-char *getHexaOf(char instructionID, short parameterValue);
+char *getCompiledFormOf(char instructionID, short parameterValue);
 
 
 // Return if the string represent a number

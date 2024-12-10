@@ -17,18 +17,22 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <ctype.h>
 #include "common.h"
 
 
 
 
-// Return if the string is only made of whitespaces
+// Return if the character is a whitespace ('\0', ' ', '\n' or '\t')
+int isWhiteSpace(char c);
+
+
+// Return if the string is only made of whitespaces ('\0', ' ', '\n' or '\t')
 int isBlankString(char *str);
 
 
 // A label only contains 'A-Z', 'a-z', '0-9' and '_'
-// First character should be in 'A-Z' or 'a-z'
+// First character should be in 'A-Z', 'a-z' or '_'
+// Cannot be an empty string
 int isValidLabelName(char *str);
 
 

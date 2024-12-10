@@ -11,16 +11,24 @@
 
 
 
+int isWhiteSpace(char c) {
+    return (!(c)) || (c == ' ') || (c == '\n') || (c == '\t');
+}
+
+
 int isBlankString(char *str) {
     if (!(str)) return 1;
-    while (str[0]) if (!(isspace((str++)[0]))) return 0;
+    while (str[0]) if (!(isWhiteSpace((str++)[0]))) return 0;
     return 1;
 }
 
 
 int isValidLabelName(char *str) {
     if (!(str)) return 0;
-    // TODO!
+    // Condition on first character (should be in 'A-Z', 'a-z' or equal to '_'), meaning labels cannot be empty string
+    if (!(('A' <= str[0] && str[0] <= 'Z') || ('a' <= str[0] && str[0] <= 'z') || (str[0] == '_'))) return 0;
+    // Condition on all other characters (should be in 'A-Z', 'a-z', '0-9' or equal to '_')
+    while ((++str)[0]) if (!(('A' <= str[0] && str[0] <= 'Z') || ('a' <= str[0] && str[0] <= 'z') || ('0' <= str[0] && str[0] <= '9') || (str[0] == '_'))) return 0;
     return 1;
 }
 
@@ -39,8 +47,8 @@ assemblyLine *readAssemblyLine(long long number, char *line, long long lineID) {
     int i = 0, j = 0, k = 0;
     // While the line has not been fully read (including the '\0' character)
     while (j == 0 || line[j-1]) {
-        // When a whitespace (here, only '\0' and ' ') character is found
-        if (!(line[j]) || isspace(line[j])) {
+        // When a whitespace ('\0', ' ', '\n' or '\t') character is found
+        if (isWhiteSpace(line[j])) {
             // If the word isn't empty
             if (j != k) {
                 // tmpArray cannot contain more than 3 strings, otherwise throw error
@@ -75,7 +83,7 @@ assemblyLine *readAssemblyLine(long long number, char *line, long long lineID) {
             tmpArray[0][strlen(tmpArray[0]) - 1] = '\0';
             if (!(isValidLabelName(tmpArray[0]))) {
                 printf("ERROR: INVALID LABEL NAME\n");
-                printf("       On line %lld, name \"%s\" cannot be used as a label\n", l->ID, tmpArray[0]);
+                printf("       On line %lld, name \"%s\" cannot be used as label\n", l->ID, tmpArray[0]);
                 free(tmpArray[0]);
                 return NULL;
             }
@@ -92,7 +100,7 @@ assemblyLine *readAssemblyLine(long long number, char *line, long long lineID) {
             // Check the validity of the label name
             if (!(isValidLabelName(tmpArray[0]))) {
                 printf("ERROR: INVALID LABEL NAME\n");
-                printf("       On line %lld, name \"%s\" cannot be used as a label\n", l->ID, tmpArray[0]);
+                printf("       On line %lld, name \"%s\" cannot be used as label\n", l->ID, tmpArray[0]);
                 for (int v = 0; v < 2; v++) free(tmpArray[v]);
                 return NULL;
             }
@@ -119,7 +127,7 @@ assemblyLine *readAssemblyLine(long long number, char *line, long long lineID) {
         // Check the validity of the label name
         if (!(isValidLabelName(tmpArray[0]))) {
             printf("ERROR: INVALID LABEL NAME\n");
-            printf("       On line %lld, name \"%s\" cannot be used as a label\n", l->ID, tmpArray[0]);
+            printf("       On line %lld, name \"%s\" cannot be used as label\n", l->ID, tmpArray[0]);
             for (int v = 0; v < 3; v++) free(tmpArray[v]);
             return NULL;
         }
@@ -138,7 +146,7 @@ assemblyLine **readAssemblyFile(FILE *inputFile) {
     // Array of *assemblyLine (last one being the NULL value)
     assemblyLine **assemblyCode   = malloc((max_line_count+1) * sizeof(assemblyLine *));
     char          *line           = malloc((line_max_size+1)  * sizeof(char));
-    long long      lineNb        = 0;
+    long long      lineNb         = 0;
     long long      lineID         = 1;
     // Set cursor at the start of the file
     rewind(inputFile);
