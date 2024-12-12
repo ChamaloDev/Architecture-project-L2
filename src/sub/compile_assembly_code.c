@@ -26,7 +26,7 @@ char *hexadecimal(int value, int size) {
     char tmp[9];
     sprintf(tmp, "%x", value);
     // Definitive hexadecimal string, initialised to '0' * <size> + '\0'
-    char *hexa = malloc(size+1);
+    char *hexa = malloc((size+1) * sizeof(char));
     for (int i = 0; i < size; i++) hexa[i] = '0';
     hexa[size+1] = '\0';
     // Copying <tmp> into <hexa> (restricting it to <size> characters)
@@ -38,16 +38,20 @@ char *hexadecimal(int value, int size) {
 
 char *getCompiledFormOf(char instructionID, short parameterValue) {
     char *compiledLine = malloc((LINE_SIZE+1) * sizeof(char));
+    char *hexa;
     compiledLine[0] = '\0';
     // Hexadecimal code of instruction
-    appendToString(compiledLine, hexadecimal(instructionID, 2));
+    hexa = hexadecimal(instructionID, 2);
+    appendToString(compiledLine, hexa);
+    free(hexa);
     // Separation space
-    compiledLine[2] = ' ';
+    appendToString(compiledLine, " ");
     // Hexadecimal value of parameter
-    appendToString(compiledLine, hexadecimal(parameterValue, 4));
+    hexa = hexadecimal(parameterValue, 4);
+    appendToString(compiledLine, hexa);
+    free(hexa);
     // End of line
-    compiledLine[7] = '\n';
-    compiledLine[8] = '\0';
+    appendToString(compiledLine, "\n");
     return compiledLine;
 }
 

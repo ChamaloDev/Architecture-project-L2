@@ -17,7 +17,7 @@
 
 
 // Line of assembly code
-typedef struct assemblyLine {
+typedef struct {
     long long  ID;           // ID of the line, refers to the line on which it was writen in the assembly file
     long long  number;       // Line number of the instruction, may be modified
     char      *label;        // Label of the line, may be NULL
