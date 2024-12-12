@@ -12,7 +12,7 @@
 
 
 int max(int a, int b) {
-    return (a > b) ? a : b;
+    return ((a > b) ? (a) : (b));
 }
 
 
@@ -37,7 +37,7 @@ char *hexadecimal(int value, int size) {
 
 
 char *getCompiledFormOf(char instructionID, short parameterValue) {
-    char *compiledLine = malloc((LINE_SIZE+1) * sizeof(char));
+    char *compiledLine = malloc((COMPILED_LINE_SIZE+1) * sizeof(char));
     char *hexa;
     compiledLine[0] = '\0';
     // Hexadecimal code of instruction
@@ -71,7 +71,7 @@ int isValidNumber(char *str) {
 short stringToShort(char *str) {
     if (!(str)) return 0;
     // If this is a signed number
-    int sign = (str[0] == '-') ? -1 : +1;
+    int sign = ((str[0] == '-') ? (-1) : (+1));
     if (str[0] == '+' || str[0] == '-') str++;
     // Read the number
     short value = 0;
@@ -84,7 +84,7 @@ short stringToShort(char *str) {
 char *shortToString(short n) {
     char *str = malloc(7 * sizeof(char));
     // Number sign
-    str[0] = (n < 0) ? '-' : '+';
+    str[0] = ((n < 0) ? ('-') : ('+'));
     // Number absolute value
     str[1] = abs(n / 10000) % 10 + '0';
     str[2] = abs(n / 1000 ) % 10 + '0';
@@ -134,9 +134,6 @@ int hasValidConstant(assemblyLine *line) {
         printf("       On line %lld, intruction \"%s\" needs a constant value (-32768 - +32767) as parameter, got \"%s\" instead\n", line->ID, line->instruction, line->parameter);
         return 0;
     }
-    /*
-        Should out of range value be counted as errors?
-    */
     return 1;
 }
 
@@ -308,7 +305,7 @@ char *compile(assemblyLine **assemblyCode) {
         }
     }
 
-    char *compiledCode = malloc((lineNb*LINE_SIZE+1) * sizeof(char));
+    char *compiledCode = malloc((lineNb*COMPILED_LINE_SIZE+1) * sizeof(char));
     compiledCode[0] = '\0';
     // Compile all assembly lines
     int result;

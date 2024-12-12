@@ -1,5 +1,7 @@
 /*
-    Common elements used by most files.
+    This this the header file for "common.c".
+
+    Common elements used by most files in this project.
 */
 
 
@@ -11,9 +13,27 @@
 
 
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+
+
+
 #define REGISTRY_SIZE 5000
+#define COMPILED_LINE_SIZE 8
 
 
+
+
+// Return if the character is a whitespace ('\0', ' ', '\n' or '\t')
+int isWhitespace(char c);
+
+
+// Read and return the first "word" found, set the <str> pointer value to point after the word just read
+// Words may be separated by ' ', '\n' or '\t'
+// Return the NULL value if no word is found
+char *readWord(char **str);
 
 
 // Line of assembly code

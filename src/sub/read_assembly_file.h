@@ -22,10 +22,6 @@
 
 
 
-// Return if the character is a whitespace ('\0', ' ', '\n' or '\t')
-int isWhiteSpace(char c);
-
-
 // Return if the string is only made of whitespaces ('\0', ' ', '\n' or '\t')
 int isBlankString(char *str);
 

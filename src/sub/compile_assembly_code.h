@@ -22,11 +22,6 @@
 
 
 
-#define LINE_SIZE 8
-
-
-
-
 // Return the maximum between <a> and <b>
 int max(int a, int b);
 

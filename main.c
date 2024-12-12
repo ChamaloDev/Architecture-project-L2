@@ -1,10 +1,19 @@
 /*
+    Project by : Avihai Halioua & Térence de Saint Léger
+
+
     This is the main file of the program.
+
     To compile it, eather run:
-        - "compile_on_Windows.cmd" if you are using Windows
-        - "compile_on_Linux.sh"    if you are using Linux
+        - "bash compile_on_Linux.sh" if you are using Linux terminal
+        - "./compile_on_Windows.cmd" if you are using Windows terminal
+        - "compile_on_Windows.cmd"   if you are using Windows command prompt
     The program can then be runned by executing the following command:
-        "./simulateur <inputPath> [<outputPath>]"
+        - "./simulateur <inputPath> [<outputPath>]" if you are using Linux terminal or the Windows terminal
+        - "simulateur <inputPath> [<outputPath>]"   if you are using the Windows command prompt
+
+    <inputPath> correspond to the path to the assembly file
+    <outputPath> correspond to the path to the compiled file, defaults to "hexa.txt"
 */
 
 
@@ -34,7 +43,7 @@ int main(int argCount, char **argValue) {
     }
 
     char *inputPath  = argValue[0];
-    char *outputPath = (argCount == 2) ? argValue[1] : "hexa.txt";
+    char *outputPath = ((argCount == 2) ? (argValue[1]) : ("hexa.txt"));
     // Assembling instructions, throw error if unsuccessful in doing so
     if (!(assemble(inputPath, outputPath))) {
         printf("INFO:  Process FAILLED to complete\n");

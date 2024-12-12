@@ -11,14 +11,9 @@
 
 
 
-int isWhiteSpace(char c) {
-    return (!(c)) || (c == ' ') || (c == '\n') || (c == '\t');
-}
-
-
 int isBlankString(char *str) {
     if (!(str)) return 1;
-    while (str[0]) if (!(isWhiteSpace((str++)[0]))) return 0;
+    while (str[0]) if (!(isWhitespace((str++)[0]))) return 0;
     return 1;
 }
 
@@ -34,6 +29,7 @@ int isValidLabelName(char *str) {
 
 
 assemblyLine *readAssemblyLine(long long number, char *line, long long lineID) {
+    // Initializing 
     assemblyLine *l = malloc(sizeof(assemblyLine));
     l->ID          = lineID;
     l->number      = number+1;
@@ -41,42 +37,23 @@ assemblyLine *readAssemblyLine(long long number, char *line, long long lineID) {
     l->instruction = NULL;
     l->parameter   = NULL;
 
-    // Reading the assembly line
-    // To do so, it is splited into a array of string, ignores whitespaces
-    char *(tmpArray[3]) = {NULL, NULL, NULL};
-    int i = 0, j = 0, k = 0;
-    // While the line has not been fully read (including the '\0' character)
-    while (j == 0 || line[j-1]) {
-        // When a whitespace ('\0', ' ', '\n' or '\t') character is found
-        if (isWhiteSpace(line[j])) {
-            // If the word isn't empty
-            if (j != k) {
-                // tmpArray cannot contain more than 3 strings, otherwise throw error
-                if (i >= 3) {
-                    printf("ERROR: ASSEMBLY SYNTAX ERROR\n");
-                    printf("       Line %lld contains too many elements\n", l->ID);
-                    for (int v = 0; v < 3; v++) free(tmpArray[v]);
-                    return NULL;
-                }
-                // If there is space remaining inside tmpArray
-                tmpArray[i] = malloc((j-k+1) * sizeof(char));
-                for (int v = 0; v < j-k; v++) tmpArray[i][v] = line[v+k];
-                tmpArray[i][j-k] = '\0';
-                i++;
-            }
-            k = j+1;
-        }
-        j++;
+    // Reading the assembly line by spliting it into an array of strings, split on whitespaces
+    char *(tmpArray[4]) = {NULL, NULL, NULL, NULL};
+    int nbElem = 0;
+    while (nbElem < 4) {
+        tmpArray[nbElem] = readWord(&line);
+        if (!(tmpArray[nbElem])) break;
+        nbElem ++;
     }
 
-    // At least 1 word has to be read
-    if (i == 0) {
+    // 0 word was read (throw an error)
+    if (nbElem == 0) {
         printf("ERROR: ASSEMBLY SYNTAX ERROR\n");
         printf("       Line %lld is empty\n", l->ID);
         return NULL;
     }
     // 1 word was read (label OR instruction)
-    else if (i == 1) {
+    else if (nbElem == 1) {
         // label
         if (tmpArray[0][strlen(tmpArray[0]) - 1] == ':') {
             // Replace the ':' character by '\0' in the label name
@@ -93,7 +70,7 @@ assemblyLine *readAssemblyLine(long long number, char *line, long long lineID) {
         else l->instruction = tmpArray[0];
     }
     // 2 words were read (label, instruction OR instruction, parameter)
-    else if (i == 2) {
+    else if (nbElem == 2) {
         // label, instruction
         if (tmpArray[0][strlen(tmpArray[0]) - 1] == ':') {
             tmpArray[0][strlen(tmpArray[0]) - 1] = '\0';
@@ -101,7 +78,7 @@ assemblyLine *readAssemblyLine(long long number, char *line, long long lineID) {
             if (!(isValidLabelName(tmpArray[0]))) {
                 printf("ERROR: INVALID LABEL NAME\n");
                 printf("       On line %lld, name \"%s\" cannot be used as label\n", l->ID, tmpArray[0]);
-                for (int v = 0; v < 2; v++) free(tmpArray[v]);
+                for (int i = 0; i < 2; i++) free(tmpArray[i]);
                 return NULL;
             }
             l->label       = tmpArray[0];
@@ -114,12 +91,12 @@ assemblyLine *readAssemblyLine(long long number, char *line, long long lineID) {
         }
     }
     // 3 words were read (label, instruction, parameter)
-    else if (i == 3) {
+    else if (nbElem == 3) {
         // Check if the string representing the label ends with ':', if not throw error
         if (tmpArray[0][strlen(tmpArray[0]) - 1] != ':') {
             printf("ERROR: INVALID LABEL NAME\n");
             printf("       On line %lld, name \"%s\" must end with ':'\n", l->ID, tmpArray[0]);
-            for (int v = 0; v < 3; v++) free(tmpArray[v]);
+            for (int i = 0; i < 3; i++) free(tmpArray[i]);
             return NULL;
         }
         // Replace the ':' character by '\0' in the label name
@@ -128,12 +105,19 @@ assemblyLine *readAssemblyLine(long long number, char *line, long long lineID) {
         if (!(isValidLabelName(tmpArray[0]))) {
             printf("ERROR: INVALID LABEL NAME\n");
             printf("       On line %lld, name \"%s\" cannot be used as label\n", l->ID, tmpArray[0]);
-            for (int v = 0; v < 3; v++) free(tmpArray[v]);
+            for (int i = 0; i < 3; i++) free(tmpArray[i]);
             return NULL;
         }
         l->label       = tmpArray[0];
         l->instruction = tmpArray[1];
         l->parameter   = tmpArray[2];
+    }
+    // 4+ words were read (throw an error)
+    else {
+        printf("ERROR: ASSEMBLY SYNTAX ERROR\n");
+        printf("       Line %lld contains too many elements\n", l->ID);
+        for (int i = 0; i < 4; i++) free(tmpArray[i]);
+        return NULL;
     }
 
     return l;
