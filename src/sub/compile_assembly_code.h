@@ -23,7 +23,7 @@
 
 
 // Return the maximum between <a> and <b>
-int max(int a, int b);
+long long max(long long a, long long b);
 
 
 // Append the string <value> at the end of the string <str>
@@ -31,7 +31,7 @@ void appendToString(char *str, char *value);
 
 
 // Convert <number> into an hexadecimal string made of <size> characters
-char *hexadecimal(int value, int size);
+char *hexadecimal(short value, size_t size);
 
 
 // Get the associated line in hexadecimal

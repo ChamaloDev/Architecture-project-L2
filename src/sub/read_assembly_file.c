@@ -28,7 +28,7 @@ int isValidLabelName(char *str) {
 }
 
 
-assemblyLine *readAssemblyLine(long long number, char *line, long long lineID) {
+assemblyLine *readAssemblyLine(size_t number, char *line, size_t lineID) {
     // Initializing 
     assemblyLine *l = malloc(sizeof(assemblyLine));
     l->ID          = lineID;
@@ -125,13 +125,13 @@ assemblyLine *readAssemblyLine(long long number, char *line, long long lineID) {
 
 
 assemblyLine **readAssemblyFile(FILE *inputFile) {
-    long long      max_line_count = 32;
-    long long      line_max_size  = 32;
+    size_t         max_line_count = 32;
+    size_t         line_max_size  = 32;
     // Array of *assemblyLine (last one being the NULL value)
     assemblyLine **assemblyCode   = malloc((max_line_count+1) * sizeof(assemblyLine *));
     char          *line           = malloc((line_max_size+1)  * sizeof(char));
-    long long      lineNb         = 0;
-    long long      lineID         = 1;
+    size_t         lineNb         = 0;
+    size_t         lineID         = 1;
     // Set cursor at the start of the file
     rewind(inputFile);
     // Read file content and convert it into assembly lines

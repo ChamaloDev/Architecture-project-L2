@@ -21,7 +21,8 @@
 
 #include <stdio.h>
 #include "src/compiler.h"
-#include "src/simulator.h"
+#include "src/runner.h"
+#include "src/sub/common.h"
 
 
 
@@ -44,16 +45,22 @@ int main(int argCount, char **argValue) {
 
     char *inputPath  = argValue[0];
     char *outputPath = ((argCount == 2) ? (argValue[1]) : ("hexa.txt"));
-    // Assembling instructions, throw error if unsuccessful in doing so
+    // Compile code, throw error if unsuccessful in doing so
     if (!(assemble(inputPath, outputPath))) {
         printf("INFO:  Process FAILLED to complete\n");
         return 1;
     }
 
-    /*
-        TODO!
-        Do simulation here
-    */
+    // Run process, throw error if unsuccessful in doing so
+    printf(">--------< START >--------<\n");
+    int result = executeProcess(outputPath, MEMORY_REGISTRY_SIZE);
+    printf(">---------< END >---------<\n");
+    if (!(result)) {
+        printf("INFO:  Process FAILLED to complete\n");
+        return 1;
+    }
+
+    // Message to indicate that the process has be completed successfully
     printf("INFO:  Process SUCCESSFULLY completed\n");
     return 0;
 }

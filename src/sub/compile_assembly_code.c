@@ -11,7 +11,7 @@
 
 
 
-int max(int a, int b) {
+long long max(long long a, long long b) {
     return ((a > b) ? (a) : (b));
 }
 
@@ -21,16 +21,16 @@ void appendToString(char *str, char *value) {
 }
 
 
-char *hexadecimal(int value, int size) {
+char *hexadecimal(short value, size_t size) {
     // Temporary hexadecimal string (likely to have wrong size)
     char tmp[9];
     sprintf(tmp, "%x", value);
     // Definitive hexadecimal string, initialised to '0' * <size> + '\0'
     char *hexa = malloc((size+1) * sizeof(char));
-    for (int i = 0; i < size; i++) hexa[i] = '0';
+    for (size_t i = 0; i < size; i++) hexa[i] = '0';
     hexa[size+1] = '\0';
     // Copying <tmp> into <hexa> (restricting it to <size> characters)
-    int sizeTmp = strlen(tmp);
+    size_t sizeTmp = strlen(tmp);
     strcpy(hexa + max(size - sizeTmp, 0), tmp + max(sizeTmp - size, 0));
     return hexa;
 }
@@ -61,8 +61,8 @@ int isValidNumber(char *str) {
     if (!(str)) return 0;
     // If this is a signed number, remove the sign
     if (str[0] == '+' || str[0] == '-') str++;
-    int i = 0;
-    for (; '0' <= str[i] && str[i] <= '9'; i++);
+    size_t i = 0;
+    while ('0' <= str[i] && str[i] <= '9') i++;
     // There must be at least 1 number, and the last character reached should be '\0'
     return (i && !(str[i]));
 }
@@ -101,20 +101,20 @@ int hasValidRegistry(assemblyLine *line) {
     // Instruction needs a parameter
     if (!(line->parameter)) {
         printf("ERROR: MISSING PARAMETER\n");
-        printf("       On line %lld, intruction \"%s\" needs a registry (0 - %d) as parameter\n", line->ID, line->instruction, REGISTRY_SIZE-1);
+        printf("       On line %lld, intruction \"%s\" needs a registry (0 - %d) as parameter\n", line->ID, line->instruction, MEMORY_REGISTRY_SIZE-1);
         return 0;
     }
     // Instruction needs a number as parameter
     if (!(isValidNumber(line->parameter))) {
         printf("ERROR: INVALID PARAMETER\n");
-        printf("       On line %lld, intruction \"%s\" needs a registry (0 - %d) as parameter, got \"%s\" instead\n", line->ID, line->instruction, REGISTRY_SIZE-1, line->parameter);
+        printf("       On line %lld, intruction \"%s\" needs a registry (0 - %d) as parameter, got \"%s\" instead\n", line->ID, line->instruction, MEMORY_REGISTRY_SIZE-1, line->parameter);
         return 0;
     }
-    // Instruction needs a number between 0 and <REGISTRY_SIZE-1> as parameter
+    // Instruction needs a number between 0 and <MEMORY_REGISTRY_SIZE-1> as parameter
     int value = stringToShort(line->parameter);
-    if (0 > value || value > REGISTRY_SIZE-1) {
+    if (0 > value || value > MEMORY_REGISTRY_SIZE-1) {
         printf("ERROR: INVALID PARAMETER\n");
-        printf("       On line %lld, intruction \"%s\" needs a registry (0 - %d) as parameter, got %d instead\n", line->ID, line->instruction, REGISTRY_SIZE-1, value);
+        printf("       On line %lld, intruction \"%s\" needs a registry (0 - %d) as parameter, got %d instead\n", line->ID, line->instruction, MEMORY_REGISTRY_SIZE-1, value);
         return 0;
     }
     return 1;
@@ -274,16 +274,16 @@ int compileLine(char *compiledCode, assemblyLine *line) {
 
 char *compile(assemblyLine **assemblyCode) {
     // Count number of lines that will be writen and adjust their line number
-    long long lineNb = 0;
-    for (long long i = 0; assemblyCode[i]; i++) {
+    size_t lineNb = 0;
+    for (size_t i = 0; assemblyCode[i]; i++) {
         assemblyCode[i]->number = lineNb+1;
         if (assemblyCode[i]->instruction) lineNb++;
     }
 
     // Look for duplicate label name and replace labels by their value
     char *tmp;
-    for (int i = 0; assemblyCode[i]; i++) {
-        if (assemblyCode[i]->label) for (int j = 0; assemblyCode[j]; j++) {
+    for (size_t i = 0; assemblyCode[i]; i++) {
+        if (assemblyCode[i]->label) for (size_t j = 0; assemblyCode[j]; j++) {
             // If a duplicate is found in label names, throw error
             if (j > i && assemblyCode[j]->label && !(strcmp(assemblyCode[i]->label, assemblyCode[j]->label))) {
                 printf("ERROR: DUPLICATE LABEL NAME\n");
@@ -309,7 +309,7 @@ char *compile(assemblyLine **assemblyCode) {
     compiledCode[0] = '\0';
     // Compile all assembly lines
     int result;
-    for (int i = 0; assemblyCode[i]; i++) {
+    for (size_t i = 0; assemblyCode[i]; i++) {
         result = compileLine(compiledCode, assemblyCode[i]);
         // If unable to compile assembly line, throw error
         if (!(result)) {

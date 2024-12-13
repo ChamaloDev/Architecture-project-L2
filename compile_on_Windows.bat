@@ -1,1 +1,1 @@
-gcc main.c src/*.c src/sub/*.c -o simulateur -Wall
+gcc main.c src/*.c src/sub/*.c -o simulateur -Wall -Wextra

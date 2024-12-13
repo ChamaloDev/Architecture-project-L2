@@ -33,7 +33,7 @@ int isValidLabelName(char *str);
 
 
 // Read a line of assembly code
-assemblyLine *readAssemblyLine(long long number, char *line, long long lineID);
+assemblyLine *readAssemblyLine(size_t number, char *line, size_t lineID);
 
 
 // Read an "assembly language" file and return a list of all the lines
