@@ -28,7 +28,7 @@ char *hexadecimal(short value, size_t size) {
     // Definitive hexadecimal string, initialised to '0' * <size> + '\0'
     char *hexa = malloc((size+1) * sizeof(char));
     for (size_t i = 0; i < size; i++) hexa[i] = '0';
-    hexa[size+1] = '\0';
+    hexa[size] = '\0';
     // Copying <tmp> into <hexa> (restricting it to <size> characters)
     size_t sizeTmp = strlen(tmp);
     strcpy(hexa + max(size - sizeTmp, 0), tmp + max(sizeTmp - size, 0));
