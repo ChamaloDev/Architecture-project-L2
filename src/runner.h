@@ -29,13 +29,13 @@ short hexaToShort(char *hexa);
 // Process memory
 typedef struct {
     short  *registry;  // Registries (0 - <size-1>)
-    size_t  size;      // Maximum number of registries
-    size_t  sp;        // Top of the temporary value pile
+    int  size;      // Maximum number of registries
+    int  sp;        // Top of the temporary value pile
 } memoryRegistry;
 
 
 // Create a new memory space
-memoryRegistry *newMemoryRegistry(size_t size);
+memoryRegistry *newMemoryRegistry(int size);
 
 
 // Process instruction
@@ -52,8 +52,8 @@ instructionLine *readCompiledLine(char *line);
 // Process list of instruction
 typedef struct {
     instructionLine **instructions;   // Instruction of the process
-    size_t            nbInstruction;  // Number of instruction
-    long long         pc;             // Index of the next instruction to run
+    int               nbInstruction;  // Number of instruction
+    int               pc;             // Index of the next instruction to run
 } programData;
 
 
@@ -69,17 +69,17 @@ typedef struct {
 
 
 // Create a new process
-process *newProcess(char *filePath, size_t memorySize);
+process *newProcess(char *filePath, int memorySize);
 
 
 // Get a pointer to the registry <number>
 // If the registry do not exist, return the NULL value
-short *getRegistry(process *process, long long number);
+short *getRegistry(process *process, int number);
 
 
 // Set the registry <number> to the value <value>
 // Return 1 if successful in doing so, 0 otherwise
-int setRegistry(process *process, size_t number, short value);
+int setRegistry(process *process, int number, short value);
 
 
 // Run a process
@@ -94,7 +94,7 @@ void killProcess(process *process);
 
 // Load, run and kill a process
 // Return 1 if successful in doing so, 0 otherwise
-int executeProcess(char *filePath, size_t memory_size);
+int executeProcess(char *filePath, int memory_size);
 
 
 

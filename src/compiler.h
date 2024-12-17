@@ -8,8 +8,8 @@
 
 
 
-#ifndef ASSEMBLY_H
-#define ASSEMBLY_H
+#ifndef COMPILER_H
+#define COMPILER_H
 
 
 
@@ -30,4 +30,4 @@ int assemble(char *inputPath, char *outputPath);
 
 
 
-#endif // ASSEMBLY_H
+#endif // COMPILER_H

@@ -19,7 +19,7 @@ short hexaToShort(char *hexa) {
 }
 
 
-memoryRegistry *newMemoryRegistry(size_t size) {
+memoryRegistry *newMemoryRegistry(int size) {
     memoryRegistry *memo = malloc(sizeof(memoryRegistry));
     memo->registry       = malloc(size * sizeof(short));
     memo->size           = size;
@@ -53,7 +53,7 @@ programData *readCompiledFile(char *filePath) {
         return NULL;
     }
 
-    size_t max_line_count = 32;
+    int max_line_count = 32;
     // Initializing the programData object
     programData *instrList   = malloc(sizeof(programData));
     instrList->instructions  = malloc(max_line_count * sizeof(instructionLine *));
@@ -77,7 +77,7 @@ programData *readCompiledFile(char *filePath) {
 }
 
 
-process *newProcess(char *filePath, size_t memorySize) {
+process *newProcess(char *filePath, int memorySize) {
     process *process = malloc(sizeof(process));
     process->memory  = newMemoryRegistry(memorySize);
     process->program = readCompiledFile(filePath);
@@ -85,12 +85,12 @@ process *newProcess(char *filePath, size_t memorySize) {
 }
 
 
-short *getRegistry(process *process, long long number) {
+short *getRegistry(process *process, int number) {
     // Invalid registry number
-    if (0 > number || (size_t) number > process->memory->size-1) {
+    if (0 > number || number > process->memory->size-1) {
         printf("ERROR: INVALID REGISTRY ACCESS\n");
-        printf("       On line %lld, cannot access registry %lld\n", process->program->pc+1, number);
-        printf("       Can only access registries 0 to %lld\n", process->memory->size-1);
+        printf("       On line %d, cannot access registry %d\n", process->program->pc+1, number);
+        printf("       Can only access registries 0 to %d\n", process->memory->size-1);
         return NULL;
     }
     // Return a pointer to the registry, allowing it to be modified
@@ -99,7 +99,7 @@ short *getRegistry(process *process, long long number) {
 }
 
 
-int setRegistry(process *process, size_t number, short value) {
+int setRegistry(process *process, int number, short value) {
     // Get the registry
     short *registry = getRegistry(process, number);
     // Do nothing if the registry was not found
@@ -119,11 +119,11 @@ int runProcess(process *process) {
     instructionLine *line;
     while (1) {
         // Check if the program has a next instruction to run, otherwise throw an error
-        if (0 <= process->program->pc && process->program->pc < (long long) process->program->nbInstruction) line = process->program->instructions[process->program->pc];
+        if (0 <= process->program->pc && process->program->pc < process->program->nbInstruction) line = process->program->instructions[process->program->pc];
         else {
             printf("ERROR: MISSING NEXT INSTRUCTION\n");
-            printf("       Reached line %lld, but no instruction is present\n", process->program->pc+1);
-            printf("       Instructions are writen on lines 1 to %lld\n", process->program->nbInstruction);
+            printf("       Reached line %d, but no instruction is present\n", process->program->pc+1);
+            printf("       Instructions are writen on lines 1 to %d\n", process->program->nbInstruction);
             return 0;
         }
 
@@ -303,7 +303,7 @@ int runProcess(process *process) {
             // Invalid operation
             else {
                 printf("ERROR: INVALID OPERATION CODE\n");
-                printf("       On line %lld, operation code %d do not exist\n", process->program->pc+1, line->parameter);
+                printf("       On line %d, operation code %d do not exist\n", process->program->pc+1, line->parameter);
                 printf("       Valid instruction codes are 0-15\n");
                 return 0;
             }
@@ -326,7 +326,7 @@ int runProcess(process *process) {
         // Invalid instruction
         else {
             printf("ERROR: INVALID INSTRUCTION CODE\n");
-            printf("       On line %lld, instruction code %d do not exist\n", process->program->pc+1, line->instruction);
+            printf("       On line %d, instruction code %d do not exist\n", process->program->pc+1, line->instruction);
             printf("       Valid instruction codes are 0-13 and 99\n");
             return 0;
         }
@@ -347,7 +347,7 @@ void killProcess(process *process) {
         if (process->program->instructions) {
             // TODO!
             // For some reason, the line bellow causes a lot of issues (crash), but I have absolutly no clue why :(
-            // for (size_t i = 0; i < process->program->nbInstruction; i++) if (process->program->instructions[i]) free(process->program->instructions[i]);
+            // for (int i = 0; i < process->program->nbInstruction; i++) if (process->program->instructions[i]) free(process->program->instructions[i]);
             free(process->program->instructions);
         }
         free(process->program);
@@ -363,7 +363,7 @@ void killProcess(process *process) {
 }
 
 
-int executeProcess(char *filePath, size_t memory_size) {
+int executeProcess(char *filePath, int memory_size) {
     // Load process
     process *process = newProcess(filePath, memory_size);
     if (!(process)) return 0;

@@ -28,7 +28,7 @@ int isValidLabelName(char *str) {
 }
 
 
-assemblyLine *readAssemblyLine(size_t number, char *line, size_t lineID) {
+assemblyLine *readAssemblyLine(int number, char *line, int lineID) {
     // Initializing 
     assemblyLine *l = malloc(sizeof(assemblyLine));
     l->ID          = lineID;
@@ -49,7 +49,7 @@ assemblyLine *readAssemblyLine(size_t number, char *line, size_t lineID) {
     // 0 word was read (throw an error)
     if (nbElem == 0) {
         printf("ERROR: ASSEMBLY SYNTAX ERROR\n");
-        printf("       Line %lld is empty\n", l->ID);
+        printf("       Line %d is empty\n", l->ID);
         return NULL;
     }
     // 1 word was read (label OR instruction)
@@ -60,7 +60,7 @@ assemblyLine *readAssemblyLine(size_t number, char *line, size_t lineID) {
             tmpArray[0][strlen(tmpArray[0]) - 1] = '\0';
             if (!(isValidLabelName(tmpArray[0]))) {
                 printf("ERROR: INVALID LABEL NAME\n");
-                printf("       On line %lld, name \"%s\" cannot be used as label\n", l->ID, tmpArray[0]);
+                printf("       On line %d, name \"%s\" cannot be used as label\n", l->ID, tmpArray[0]);
                 free(tmpArray[0]);
                 return NULL;
             }
@@ -77,7 +77,7 @@ assemblyLine *readAssemblyLine(size_t number, char *line, size_t lineID) {
             // Check the validity of the label name
             if (!(isValidLabelName(tmpArray[0]))) {
                 printf("ERROR: INVALID LABEL NAME\n");
-                printf("       On line %lld, name \"%s\" cannot be used as label\n", l->ID, tmpArray[0]);
+                printf("       On line %d, name \"%s\" cannot be used as label\n", l->ID, tmpArray[0]);
                 for (int i = 0; i < 2; i++) free(tmpArray[i]);
                 return NULL;
             }
@@ -95,7 +95,7 @@ assemblyLine *readAssemblyLine(size_t number, char *line, size_t lineID) {
         // Check if the string representing the label ends with ':', if not throw error
         if (tmpArray[0][strlen(tmpArray[0]) - 1] != ':') {
             printf("ERROR: INVALID LABEL NAME\n");
-            printf("       On line %lld, name \"%s\" must end with ':'\n", l->ID, tmpArray[0]);
+            printf("       On line %d, name \"%s\" must end with ':'\n", l->ID, tmpArray[0]);
             for (int i = 0; i < 3; i++) free(tmpArray[i]);
             return NULL;
         }
@@ -104,7 +104,7 @@ assemblyLine *readAssemblyLine(size_t number, char *line, size_t lineID) {
         // Check the validity of the label name
         if (!(isValidLabelName(tmpArray[0]))) {
             printf("ERROR: INVALID LABEL NAME\n");
-            printf("       On line %lld, name \"%s\" cannot be used as label\n", l->ID, tmpArray[0]);
+            printf("       On line %d, name \"%s\" cannot be used as label\n", l->ID, tmpArray[0]);
             for (int i = 0; i < 3; i++) free(tmpArray[i]);
             return NULL;
         }
@@ -115,7 +115,7 @@ assemblyLine *readAssemblyLine(size_t number, char *line, size_t lineID) {
     // 4+ words were read (throw an error)
     else {
         printf("ERROR: ASSEMBLY SYNTAX ERROR\n");
-        printf("       Line %lld contains too many elements\n", l->ID);
+        printf("       Line %d contains too many elements\n", l->ID);
         for (int i = 0; i < 4; i++) free(tmpArray[i]);
         return NULL;
     }
@@ -125,20 +125,20 @@ assemblyLine *readAssemblyLine(size_t number, char *line, size_t lineID) {
 
 
 assemblyLine **readAssemblyFile(FILE *inputFile) {
-    size_t         max_line_count = 32;
-    size_t         line_max_size  = 32;
+    int         max_line_count = 32;
+    int         line_max_size  = 32;
     // Array of *assemblyLine (last one being the NULL value)
     assemblyLine **assemblyCode   = malloc((max_line_count+1) * sizeof(assemblyLine *));
     char          *line           = malloc((line_max_size+1)  * sizeof(char));
-    size_t         lineNb         = 0;
-    size_t         lineID         = 1;
+    int         lineNb         = 0;
+    int         lineID         = 1;
     // Set cursor at the start of the file
     rewind(inputFile);
     // Read file content and convert it into assembly lines
     while (fgets(line, line_max_size+1, inputFile)) {
     	char *p = NULL;
         // If more memory is needed
-        if (strlen(line) >= line_max_size) {
+        if (strlen(line) >= (size_t) line_max_size) {
             // Try reading again the same line by setting the cursor back to the start of the line
             fseek(inputFile, -(line_max_size), SEEK_CUR);
             // Extend line buffer size

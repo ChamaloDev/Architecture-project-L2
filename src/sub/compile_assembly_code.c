@@ -11,7 +11,7 @@
 
 
 
-long long max(long long a, long long b) {
+int max(int a, int b) {
     return ((a > b) ? (a) : (b));
 }
 
@@ -21,16 +21,16 @@ void appendToString(char *str, char *value) {
 }
 
 
-char *hexadecimal(short value, size_t size) {
+char *hexadecimal(short value, int size) {
     // Temporary hexadecimal string (likely to have wrong size)
     char tmp[9];
     sprintf(tmp, "%x", value);
     // Definitive hexadecimal string, initialised to '0' * <size> + '\0'
     char *hexa = malloc((size+1) * sizeof(char));
-    for (size_t i = 0; i < size; i++) hexa[i] = '0';
+    for (int i = 0; i < size; i++) hexa[i] = '0';
     hexa[size] = '\0';
     // Copying <tmp> into <hexa> (restricting it to <size> characters)
-    size_t sizeTmp = strlen(tmp);
+    int sizeTmp = strlen(tmp);
     strcpy(hexa + max(size - sizeTmp, 0), tmp + max(sizeTmp - size, 0));
     return hexa;
 }
@@ -61,7 +61,7 @@ int isValidNumber(char *str) {
     if (!(str)) return 0;
     // If this is a signed number, remove the sign
     if (str[0] == '+' || str[0] == '-') str++;
-    size_t i = 0;
+    int i = 0;
     while ('0' <= str[i] && str[i] <= '9') i++;
     // There must be at least 1 number, and the last character reached should be '\0'
     return (i && !(str[i]));
@@ -101,20 +101,20 @@ int hasValidRegistry(assemblyLine *line) {
     // Instruction needs a parameter
     if (!(line->parameter)) {
         printf("ERROR: MISSING PARAMETER\n");
-        printf("       On line %lld, intruction \"%s\" needs a registry (0 - %d) as parameter\n", line->ID, line->instruction, MEMORY_REGISTRY_SIZE-1);
+        printf("       On line %d, intruction \"%s\" needs a registry (0 - %d) as parameter\n", line->ID, line->instruction, MEMORY_REGISTRY_SIZE-1);
         return 0;
     }
     // Instruction needs a number as parameter
     if (!(isValidNumber(line->parameter))) {
         printf("ERROR: INVALID PARAMETER\n");
-        printf("       On line %lld, intruction \"%s\" needs a registry (0 - %d) as parameter, got \"%s\" instead\n", line->ID, line->instruction, MEMORY_REGISTRY_SIZE-1, line->parameter);
+        printf("       On line %d, intruction \"%s\" needs a registry (0 - %d) as parameter, got \"%s\" instead\n", line->ID, line->instruction, MEMORY_REGISTRY_SIZE-1, line->parameter);
         return 0;
     }
     // Instruction needs a number between 0 and <MEMORY_REGISTRY_SIZE-1> as parameter
     int value = stringToShort(line->parameter);
     if (0 > value || value > MEMORY_REGISTRY_SIZE-1) {
         printf("ERROR: INVALID PARAMETER\n");
-        printf("       On line %lld, intruction \"%s\" needs a registry (0 - %d) as parameter, got %d instead\n", line->ID, line->instruction, MEMORY_REGISTRY_SIZE-1, value);
+        printf("       On line %d, intruction \"%s\" needs a registry (0 - %d) as parameter, got %d instead\n", line->ID, line->instruction, MEMORY_REGISTRY_SIZE-1, value);
         return 0;
     }
     return 1;
@@ -125,13 +125,13 @@ int hasValidConstant(assemblyLine *line) {
     // Instruction needs a parameter
     if (!(line->parameter)) {
         printf("ERROR: MISSING PARAMETER\n");
-        printf("       On line %lld, intruction \"%s\" needs a constant value (-32768 - +32767) as parameter\n", line->ID, line->instruction);
+        printf("       On line %d, intruction \"%s\" needs a constant value (-32768 - +32767) as parameter\n", line->ID, line->instruction);
         return 0;
     }
     // Instruction needs a number as parameter
     if (!(isValidNumber(line->parameter))) {
         printf("ERROR: INVALID PARAMETER\n");
-        printf("       On line %lld, intruction \"%s\" needs a constant value (-32768 - +32767) as parameter, got \"%s\" instead\n", line->ID, line->instruction, line->parameter);
+        printf("       On line %d, intruction \"%s\" needs a constant value (-32768 - +32767) as parameter, got \"%s\" instead\n", line->ID, line->instruction, line->parameter);
         return 0;
     }
     return 1;
@@ -142,13 +142,13 @@ int hasValidLabel(assemblyLine *line) {
     // Instruction needs a parameter
     if (!(line->parameter)) {
         printf("ERROR: MISSING PARAMETER\n");
-        printf("       On line %lld, intruction \"%s\" needs a label as parameter\n", line->ID, line->instruction);
+        printf("       On line %d, intruction \"%s\" needs a label as parameter\n", line->ID, line->instruction);
         return 0;
     }
     // Instruction needs a number as parameter
     if (!(isValidNumber(line->parameter))) {
         printf("ERROR: LABEL NOT FOUND\n");
-        printf("       On line %lld, label \"%s\" has not been defined\n", line->ID, line->parameter);
+        printf("       On line %d, label \"%s\" has not been defined\n", line->ID, line->parameter);
         return 0;
     }
     return 1;
@@ -159,7 +159,7 @@ int hasNoParameter(assemblyLine *line) {
     // Instruction cannot have a parameter
     if (line->parameter) {
         printf("ERROR: INVALID PARAMETER\n");
-        printf("       On line %lld, intruction \"%s\" cannot take a parameter\n", line->ID, line->instruction);
+        printf("       On line %d, intruction \"%s\" cannot take a parameter\n", line->ID, line->instruction);
         return 0;
     }
     return 1;
@@ -241,7 +241,7 @@ int compileLine(char *compiledCode, assemblyLine *line) {
         int value = stringToShort(line->parameter);
         if (0 > value || value > 15) {
             printf("ERROR: INVALID PARAMETER\n");
-            printf("       On line %lld, intruction \"%s\" needs an operation code (0 - 15) as parameter, got %s instead\n", line->ID, line->instruction, line->parameter);
+            printf("       On line %d, intruction \"%s\" needs an operation code (0 - 15) as parameter, got %s instead\n", line->ID, line->instruction, line->parameter);
             return 0;
         }
         appendToString(compiledCode, getCompiledFormOf(11, value));
@@ -267,27 +267,27 @@ int compileLine(char *compiledCode, assemblyLine *line) {
     }
     // Invalid instruction
     printf("ERROR: INVALID INSTRUCTION\n");
-    printf("       On line %lld, instruction \"%s\" is not defined\n", line->ID, line->instruction);
+    printf("       On line %d, instruction \"%s\" is not defined\n", line->ID, line->instruction);
     return 0;
 }
 
 
 char *compile(assemblyLine **assemblyCode) {
     // Count number of lines that will be writen and adjust their line number
-    size_t lineNb = 0;
-    for (size_t i = 0; assemblyCode[i]; i++) {
+    int lineNb = 0;
+    for (int i = 0; assemblyCode[i]; i++) {
         assemblyCode[i]->number = lineNb+1;
         if (assemblyCode[i]->instruction) lineNb++;
     }
 
     // Look for duplicate label name and replace labels by their value
     char *tmp;
-    for (size_t i = 0; assemblyCode[i]; i++) {
-        if (assemblyCode[i]->label) for (size_t j = 0; assemblyCode[j]; j++) {
+    for (int i = 0; assemblyCode[i]; i++) {
+        if (assemblyCode[i]->label) for (int j = 0; assemblyCode[j]; j++) {
             // If a duplicate is found in label names, throw error
             if (j > i && assemblyCode[j]->label && !(strcmp(assemblyCode[i]->label, assemblyCode[j]->label))) {
                 printf("ERROR: DUPLICATE LABEL NAME\n");
-                printf("       Label \"%s\" has duplicates, on lines %lld and %lld\n", assemblyCode[i]->label, assemblyCode[i]->ID, assemblyCode[j]->ID);
+                printf("       Label \"%s\" has duplicates, on lines %d and %d\n", assemblyCode[i]->label, assemblyCode[i]->ID, assemblyCode[j]->ID);
                 return NULL;
             }
             // Replacing label by its value
@@ -295,7 +295,7 @@ char *compile(assemblyLine **assemblyCode) {
                 // Check if the instruction do take a label as parameter, if not throw an error
                 if (strcmp(assemblyCode[j]->instruction, "jmp") && strcmp(assemblyCode[j]->instruction, "jnz") && strcmp(assemblyCode[j]->instruction, "call")) {
                     printf("ERROR: INVALID PARAMETER\n");
-                    printf("       On line %lld, intruction \"%s\" cannot take label \"%s\" as parameter\n", assemblyCode[j]->ID, assemblyCode[j]->instruction, assemblyCode[j]->parameter);
+                    printf("       On line %d, intruction \"%s\" cannot take label \"%s\" as parameter\n", assemblyCode[j]->ID, assemblyCode[j]->instruction, assemblyCode[j]->parameter);
                     return NULL;
                 }
                 tmp = shortToString(assemblyCode[i]->number - assemblyCode[j]->number - 1);
@@ -309,7 +309,7 @@ char *compile(assemblyLine **assemblyCode) {
     compiledCode[0] = '\0';
     // Compile all assembly lines
     int result;
-    for (size_t i = 0; assemblyCode[i]; i++) {
+    for (int i = 0; assemblyCode[i]; i++) {
         result = compileLine(compiledCode, assemblyCode[i]);
         // If unable to compile assembly line, throw error
         if (!(result)) {

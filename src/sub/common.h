@@ -38,11 +38,11 @@ char *readWord(char **str);
 
 // Line of assembly code
 typedef struct {
-    size_t     ID;           // ID of the line, refers to the line on which it was writen in the assembly file
-    size_t     number;       // Line number of the instruction, may be modified
-    char      *label;        // Label of the line, may be NULL
-    char      *instruction;  // Instruction of the line, may be NULL
-    char      *parameter;    // Parameter of the instruction, may be NULL
+    int   ID;           // ID of the line, refers to the line on which it was writen in the assembly file
+    int   number;       // Line number of the instruction, may be modified
+    char *label;        // Label of the line, may be NULL
+    char *instruction;  // Instruction of the line, may be NULL
+    char *parameter;    // Parameter of the instruction, may be NULL
 } assemblyLine;
 
 
