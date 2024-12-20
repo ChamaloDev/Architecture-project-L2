@@ -17,6 +17,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include "sub/common.h"
 
 
@@ -80,6 +81,14 @@ short *getRegistry(process *process, int number);
 // Set the registry <number> to the value <value>
 // Return 1 if successful in doing so, 0 otherwise
 int setRegistry(process *process, int number, short value);
+
+
+// Unstack and return the registry on top of the stack
+short *popRegistry(process *process);
+
+
+// Stack a value on top of the registry stack
+int pushRegistry(process *process, short value);
 
 
 // Run a process

@@ -11,7 +11,7 @@
 
 
 int isWhitespace(char c) {
-    return (!(c)) || (c == ' ') || (c == '\n') || (c == '\t');
+    return (!(c)) || (c == ' ') || (c == '\n') || (c == '\r') || (c == '\t');
 }
 
 

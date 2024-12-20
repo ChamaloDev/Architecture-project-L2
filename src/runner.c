@@ -94,8 +94,7 @@ short *getRegistry(process *process, int number) {
         return NULL;
     }
     // Return a pointer to the registry, allowing it to be modified
-    short *registry = &process->memory->registry[number];
-    return registry;
+    return &process->memory->registry[number];
 }
 
 
@@ -110,7 +109,21 @@ int setRegistry(process *process, int number, short value) {
 }
 
 
+short *popRegistry(process *process) {
+    process->memory->sp--;
+    return getRegistry(process, process->memory->sp);
+}
+
+
+int pushRegistry(process *process, short value) {
+    process->memory->sp++;
+    return setRegistry(process, process->memory->sp-1, value);
+}
+
+
 int runProcess(process *process) {
+    // Initializing random seed
+    srand(time(NULL));
     // Temporary variables
     short *regA;
     short *regB;
@@ -129,176 +142,140 @@ int runProcess(process *process) {
 
         // Instruction (00) pop x
         if      (line->instruction ==  0) {
-            // [SP-- ; (x)=(SP)]
-            process->memory->sp--;                                                                          // SP--
-            regA = getRegistry(process, process->memory->sp);                       if (!(regA)) return 0;  // [Getting (SP) value]
-            res  = setRegistry(process, line->parameter, (*regA));                  if (!(res))  return 0;  // (x) = (SP)
+            regA = popRegistry(process);                                  if (!(regA)) return 0;  // [Getting (SP-1) value] ; SP--
+            res  = setRegistry(process, line->parameter, (*regA));        if (!(res))  return 0;  // (x) = (SP-1)
         }
         // Instruction (01) ipop
         else if (line->instruction ==  1) {
-            // [((SP-1))=(SP-2) ; SP=SP-2]
-            regA = getRegistry(process, process->memory->sp-1);                     if (!(regA)) return 0;  // [Getting (SP-1) value]
-            regB = getRegistry(process, process->memory->sp-2);                     if (!(regB)) return 0;  // [Getting (SP-2) value]
-            res  = setRegistry(process, (*regA), (*regB));                          if (!(res))  return 0;  // ((SP-1)) = (SP-2)
-            process->memory->sp -= 2;                                                                       // SP = SP - 2
+            regA = popRegistry(process);                                  if (!(regA)) return 0;  // [Getting (SP-1) value] ; SP--
+            regB = popRegistry(process);                                  if (!(regB)) return 0;  // [Getting (SP-2) value] ; SP--
+            res  = setRegistry(process, (*regA), (*regB));                if (!(res))  return 0;  // ((SP-1)) = (SP-2)
         }
         // Instruction (02) push x
         else if (line->instruction ==  2) {
-            // [(SP)=(x) ; SP++]
-            regA = getRegistry(process, line->parameter);                           if (!(regA)) return 0;  // [Getting (x) value]
-            res  = setRegistry(process, process->memory->sp, (*regA));              if (!(res))  return 0;  // (SP) = (x)
-            process->memory->sp++;                                                                          // SP++
+            regA = getRegistry(process, line->parameter);                 if (!(regA)) return 0;  // [Getting (x) value]
+            res  = pushRegistry(process, (*regA));                        if (!(res))  return 0;  // (SP) = (x) ; SP++
         }
         // Instruction (03) ipush
         else if (line->instruction ==  3) {
-            // [(SP-1)=((SP-1))]
-            regA = getRegistry(process, process->memory->sp-1);                     if (!(regA)) return 0;  // [Getting (SP-1) value]
-            regB = getRegistry(process, (*regA));                                   if (!(regB)) return 0;  // [Getting ((SP-1)) value]
-            (*regA) = (*regB);                                                                              // (SP-1) = ((SP-1))
+            regA = popRegistry(process);                                  if (!(regA)) return 0;  // [Getting (SP-1) value] ; SP--
+            regB = getRegistry(process, (*regA));                         if (!(regB)) return 0;  // [Getting ((SP-1)) value]
+            res  = pushRegistry(process, (*regB));                        if (!(res))  return 0;  // (SP-1) = ((SP-1)) ; SP++
         }
         // Instruction (04) push# i
         else if (line->instruction ==  4) {
-            // [(SP)=i ; SP++]
-            res  = setRegistry(process, process->memory->sp, line->parameter);      if (!(res))  return 0;  // (SP) = i
-            process->memory->sp++;                                                                          // SP++
+            res  = pushRegistry(process, line->parameter);                if (!(res))  return 0;  // (SP) = i ; SP++
         }
         // Instruction (05) jmp adr
         else if (line->instruction ==  5) {
-            // [PC=PC+adr]
-            process->program->pc += line->parameter;                                                        // PC = PC + adr
+            process->program->pc += line->parameter;                                              // PC = PC + adr
         }
         // Instruction (06) jnz adr
         else if (line->instruction ==  6) {
-            // [SP-- ; If (SP)≠0 then PC=PC+adr]
-            process->memory->sp--;                                                                          // SP--
-            regA = getRegistry(process, process->memory->sp);                       if (!(regA)) return 0;  // [Getting (SP) value]
-            if ((*regA)) process->program->pc += line->parameter;                                           // If (SP) ≠ 0 then PC = PC + adr
+            regA = popRegistry(process);                                  if (!(regA)) return 0;  // [Getting (SP-1) value] ; SP--
+            if ((*regA)) process->program->pc += line->parameter;                                 // If (SP-1) ≠ 0 then PC = PC + adr
         }
         // Instruction (07) call adr
         else if (line->instruction ==  7) {
-            // [(SP)=PC ; SP++ ; PC=PC+adr]
-            res  = setRegistry(process, process->memory->sp, process->program->pc); if (!(res))  return 0;  // (SP) = PC
-            process->memory->sp++;                                                                          // SP++
-            process->program->pc += line->parameter;                                                        // PC = PC + adr
+            res  = pushRegistry(process, process->program->pc);           if (!(res))  return 0;  // (SP) = PC ; SP++
+            process->program->pc += line->parameter;                                              // PC = PC + adr
         }
         // Instruction (08) ret
         else if (line->instruction ==  8) {
-            // [SP-- ; PC=(SP)]
-            process->memory->sp--;                                                                          // SP--
-            regA = getRegistry(process, process->memory->sp);                       if (!(regA)) return 0;  // [Getting (SP) value]
-            process->program->pc = (*regA);                                                                 // PC = (SP)
+            regA = popRegistry(process);                                  if (!(regA)) return 0;  // [Getting (SP-1) value] ; SP--
+            process->program->pc = (*regA);                                                       // PC = (SP-1)
         }
         // Instruction (09) read x
         else if (line->instruction ==  9) {
-            // [(x)=INPUT]
-            if (scanf("%hd", &res) != 1)                                                         return 0;  // [Getting INPUT value]
-            while (getchar() != '\n');                                                                      // Clearing buffer
-            res  = setRegistry(process, line->parameter, res);                      if (!(res))  return 0;  // (x) = INPUT
+            if (scanf("%hd", &res) != 1)                                               return 0;  // [Getting INPUT value]
+            while (getchar() != '\n');                                                            // Clearing buffer
+            res  = setRegistry(process, line->parameter, res);            if (!(res))  return 0;  // (x) = INPUT
         }
         // Instruction (10) write x
         else if (line->instruction == 10) {
-            // [OUTPUT=(x)]
-            regA = getRegistry(process, line->parameter);                           if (!(regA)) return 0;  // [Getting (x) value]
-            printf("%hd\n", (*regA));                                                                       // OUTPUT = (x)
+            regA = getRegistry(process, line->parameter);                 if (!(regA)) return 0;  // [Getting (x) value]
+            printf("%hd\n", (*regA));                                                             // OUTPUT = (x)
         }
 
         // Instruction (11) op i
         else if (line->instruction == 11) {
             // Base instruction for all possible operations (load used values)
             if (line->parameter != 9 && line->parameter != 15) {
-                // [SP--]
-                process->memory->sp--;                                                                      // SP--
-                regA = getRegistry(process, process->memory->sp-1);                 if (!(regA)) return 0;  // [Getting (SP-1) value]
-                regB = getRegistry(process, process->memory->sp);                   if (!(regB)) return 0;  // [Getting (SP) value]
+                regB = popRegistry(process);                              if (!(regB)) return 0;  // [Getting (SP-1) value] ; SP--
+                regA = popRegistry(process);                              if (!(regA)) return 0;  // [Getting (SP-2) value] ; SP--
             }
             else {
-                regA = getRegistry(process, process->memory->sp-1);                 if (!(regA)) return 0;  // [Getting (SP-1) value]
+                regA = popRegistry(process);                              if (!(regA)) return 0;  // [Getting (SP-1) value] ; SP--
             }
             // Operation (00) "EQUAL"
             if      (line->parameter ==  0) {
-                // [SP-- ; if (SP-1)=(SP) then (SP-1)=1 else (SP-1)=0]
-                if ((*regA) == (*regB)) (*regA) = 1;                                                        // if (SP-1) = (SP) then (SP-1) = 1
-                else                    (*regA) = 0;                                                        // if (SP-1) ≠ (SP) then (SP-1) = 0
+                if ((*regA) == (*regB)) {res = pushRegistry(process, 1);  if (!(res))  return 0;} // if (SP-2) = (SP-1) then (SP-2) = 1 and SP++
+                else                    {res = pushRegistry(process, 0);  if (!(res))  return 0;} // if (SP-2) ≠ (SP-1) then (SP-2) = 0 and SP++
             }
             // Operation (01) "DIFFERENT"
             else if (line->parameter ==  1) {
-                // [SP-- ; if (SP-1)≠(SP) then (SP-1)=1 else (SP-1)=0]
-                if ((*regA) != (*regB)) (*regA) = 1;                                                        // if (SP-1) ≠ (SP) then (SP-1) = 1
-                else                    (*regA) = 0;                                                        // if (SP-1) = (SP) then (SP-1) = 0
+                if ((*regA) != (*regB)) {res = pushRegistry(process, 1);  if (!(res))  return 0;} // if (SP-2) ≠ (SP-1) then (SP-2) = 1 and SP++
+                else                    {res = pushRegistry(process, 0);  if (!(res))  return 0;} // if (SP-2) = (SP-1) then (SP-2) = 0 and SP++
             }
             // Operation (02) "GREATER OR EQUAL"
             else if (line->parameter ==  2) {
-                // [SP-- ; if (SP-1)≥(SP) then (SP-1)=1 else (SP-1)=0]
-                if ((*regA) >= (*regB)) (*regA) = 1;                                                        // if (SP-1) ≥ (SP) then (SP-1) = 1
-                else                    (*regA) = 0;                                                        // if (SP-1) < (SP) then (SP-1) = 0
+                if ((*regA) >= (*regB)) {res = pushRegistry(process, 1);  if (!(res))  return 0;} // if (SP-2) ≥ (SP-1) then (SP-2) = 1 and SP++
+                else                    {res = pushRegistry(process, 0);  if (!(res))  return 0;} // if (SP-2) < (SP-1) then (SP-2) = 0 and SP++
             }
             // Operation (03) "SMALLER OR EQUAL"
             else if (line->parameter ==  3) {
-                // [SP-- ; if (SP-1)≤(SP) then (SP-1)=1 else (SP-1)=0]
-                if ((*regA) <= (*regB)) (*regA) = 1;                                                        // if (SP-1) ≤ (SP) then (SP-1) = 1
-                else                    (*regA) = 0;                                                        // if (SP-1) > (SP) then (SP-1) = 0
+                if ((*regA) <= (*regB)) {res = pushRegistry(process, 1);  if (!(res))  return 0;} // if (SP-2) ≤ (SP-1) then (SP-2) = 1 and SP++
+                else                    {res = pushRegistry(process, 0);  if (!(res))  return 0;} // if (SP-2) > (SP-1) then (SP-2) = 0 and SP++
             }
             // Operation (04) "STRICTLY GREATER"
             else if (line->parameter ==  4) {
-                // [SP-- ; if (SP-1)>(SP) then (SP-1)=1 else (SP-1)=0]
-                if ((*regA) >  (*regB)) (*regA) = 1;                                                        // if (SP-1) > (SP) then (SP-1) = 1
-                else                    (*regA) = 0;                                                        // if (SP-1) ≤ (SP) then (SP-1) = 0
+                if ((*regA) >  (*regB)) {res = pushRegistry(process, 1);  if (!(res))  return 0;} // if (SP-2) > (SP-1) then (SP-2) = 1 and SP++
+                else                    {res = pushRegistry(process, 0);  if (!(res))  return 0;} // if (SP-2) ≤ (SP-1) then (SP-2) = 0 and SP++
             }
             // Operation (05) "STRICTLY SMALLER"
             else if (line->parameter ==  5) {
-                // [SP-- ; if (SP-1)<(SP) then (SP-1)=1 else (SP-1)=0]
-                if ((*regA) <  (*regB)) (*regA) = 1;                                                        // if (SP-1) < (SP) then (SP-1) = 1
-                else                    (*regA) = 0;                                                        // if (SP-1) ≥ (SP) then (SP-1) = 0
+                if ((*regA) <  (*regB)) {res = pushRegistry(process, 1);  if (!(res))  return 0;} // if (SP-2) < (SP-1) then (SP-2) = 1 and SP++
+                else                    {res = pushRegistry(process, 0);  if (!(res))  return 0;} // if (SP-2) ≥ (SP-1) then (SP-2) = 0 and SP++
             }
             // Operation (06) "LOGICAL OR"
             else if (line->parameter ==  6) {
-                // [SP-- ; (SP-1)=(SP-1)|(SP)]
-                (*regA) = (*regA) | (*regB);                                                                // (SP-1) = (SP-1) | (SP)
+                res  = pushRegistry(process, (*regA) | (*regB));          if (!(res))  return 0;  // (SP-2) = (SP-2) | (SP-1) ; SP++
             }
             // Operation (07) "LOGICAL OR"
             else if (line->parameter ==  7) {
-                // [SP-- ; (SP-1)=(SP-1)^(SP)]
-                (*regA) = (*regA) ^ (*regB);                                                                // (SP-1) = (SP-1) ^ (SP)
+                res  = pushRegistry(process, (*regA) ^ (*regB));          if (!(res))  return 0;  // (SP-2) = (SP-2) ^ (SP-1) ; SP++
             }
             // Operation (08) "LOGICAL AND"
             else if (line->parameter ==  8) {
-                // [SP-- ; (SP-1)=(SP-1)&(SP)]
-                (*regA) = (*regA) & (*regB);                                                                // (SP-1) = (SP-1) & (SP)
+                res  = pushRegistry(process, (*regA) & (*regB));          if (!(res))  return 0;  // (SP-2) = (SP-2) & (SP-1) ; SP++
             }
             // Operation (09) "LOGICAL NOT"
             else if (line->parameter ==  9) {
-                // [SP-- ; (SP-1)=~(SP-1)]
-                (*regA) = ~(*regA);                                                                         // (SP-1) = ~(SP - 1)
+                res  = pushRegistry(process, ~(*regA));                   if (!(res))  return 0;  // (SP-1) = ~(SP-1) ; SP++
             }
             // Operation (10) "ADD"
             else if (line->parameter == 10) {
-                // [SP-- ; (SP-1)=(SP-1)+(SP)]
-                (*regA) = (*regA) + (*regB);                                                                // (SP-1) = (SP-1) + (SP)
+                res  = pushRegistry(process, (*regA) + (*regB));          if (!(res))  return 0;  // (SP-2) = (SP-2) + (SP-1) ; SP++
             }
             // Operation (11) "SUBSTRACT"
             else if (line->parameter == 11) {
-                // [SP-- ; (SP-1)=(SP-1)-(SP)]
-                (*regA) = (*regA) - (*regB);                                                                // (SP-1) = (SP-1) - (SP)
+                res  = pushRegistry(process, (*regA) - (*regB));          if (!(res))  return 0;  // (SP-2) = (SP-2) - (SP-1) ; SP++
             }
             // Operation (12) "MULTIPLY"
             else if (line->parameter == 12) {
-                // [SP-- ; (SP-1)=(SP-1)*(SP)]
-                (*regA) = (*regA) * (*regB);                                                                // (SP-1) = (SP-1) * (SP)
+                res  = pushRegistry(process, (*regA) * (*regB));          if (!(res))  return 0;  // (SP-2) = (SP-2) * (SP-1) ; SP++
             }
             // Operation (13) "DIVIDE"
             else if (line->parameter == 13) {
-                // [SP-- ; (SP-1)=(SP-1)/(SP)]
-                (*regA) = (*regA) / (*regB);                                                                // (SP-1) = (SP-1) / (SP)
+                res  = pushRegistry(process, (*regA) / (*regB));          if (!(res))  return 0;  // (SP-2) = (SP-2) / (SP-1) ; SP++
             }
             // Operation (14) "MODULO"
             else if (line->parameter == 14) {
-                // [SP-- ; (SP-1)=(SP-1)%(SP)]
-                (*regA) = (*regA) % (*regB);                                                                // (SP-1) = (SP-1) % (SP)
+                res  = pushRegistry(process, (*regA) % (*regB));          if (!(res))  return 0;  // (SP-2) = (SP-2) % (SP-1) ; SP++
             }
             // Operation (15) "INVERT"
             else if (line->parameter == 15) {
-                // [SP-- ; (SP-1)=-(SP-1)]
-                (*regA) = -(*regA);                                                                         // (SP-1) = -(SP-1)
+                res  = pushRegistry(process, -(*regA));                   if (!(res))  return 0;  // (SP-1) = -(SP-1) ; SP++
             }
             // Invalid operation
             else {
@@ -310,17 +287,18 @@ int runProcess(process *process) {
         }
 
         // Instruction (12) rnd x
-        // TODO!
+        else if (line->instruction == 12) {
+            regA = getRegistry(process, line->parameter);                 if (!(regA)) return 0;  // [Getting (x) value]
+            res  = pushRegistry(process, rand() % (*regA));               if (!(res))  return 0;  // (SP) = RANDOM % (x) ; SP++
+        }
         // Instruction (13) dup
         else if (line->instruction == 13) {
-            // [(SP)=(SP-1) ; SP++]
-            regA = getRegistry(process, process->memory->sp-1);                     if (!(regA)) return 0;  // [Getting (SP-1) value]
-            res  = setRegistry(process, process->memory->sp, (*regA));              if (!(res))  return 0;  // (SP-1) = ((SP-1))
-            process->memory->sp++;                                                                          // SP++
+            regA = popRegistry(process);                                  if (!(regA)) return 0;  // [Getting (SP-1) value] ; SP--
+            res  = pushRegistry(process, (*regA));                        if (!(res))  return 0;  // (SP-1) = (SP-1) ; SP++
+            res  = pushRegistry(process, (*regA));                        if (!(res))  return 0;  // (SP) = (SP-1) ; SP++
         }
         // Instruction (99) halt
         else if (line->instruction == 99) {
-            // [EXIT]
             return 1;                                                                                       // EXIT
         }
         // Invalid instruction
@@ -346,7 +324,7 @@ void killProcess(process *process) {
         // Unload all instructions
         if (process->program->instructions) {
             // TODO!
-            // For some reason, the line bellow causes a lot of issues (crash), but I have absolutly no clue why :(
+            // This still may cause some random crashes...
             // for (int i = 0; i < process->program->nbInstruction; i++) if (process->program->instructions[i]) free(process->program->instructions[i]);
             free(process->program->instructions);
         }
