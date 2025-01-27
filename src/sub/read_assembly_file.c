@@ -151,9 +151,9 @@ assemblyLine **readAssemblyFile(FILE *inputFile) {
         // Replace the first occurence of '\n' by '\0'
         p = strchr(line, '\n');
         if (p) *p = '\0';
-        // Ignore comments (text after the '/' character)
+        // Ignore comments (text after the ';' character)
         // This step MUST be done AFTER memory reallocation check
-    	p = strchr(line, '/');
+    	p = strchr(line, ';');
         if (p) *p = '\0';
 
         // Only count not empty lines
