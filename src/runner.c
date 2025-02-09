@@ -286,10 +286,9 @@ int runProcess(process *process) {
             }
         }
 
-        // Instruction (12) rnd x
+        // Instruction (12) rnd i
         else if (line->instruction == 12) {
-            regA = getRegistry(process, line->parameter);                 if (!(regA)) return 0;  // [Getting (x) value]
-            res  = pushRegistry(process, rand() % (*regA));               if (!(res))  return 0;  // (SP) = RANDOM % (x) ; SP++
+            res  = pushRegistry(process, rand() % line->parameter);       if (!(res))  return 0;  // (SP) = RANDOM % x ; SP++
         }
         // Instruction (13) dup
         else if (line->instruction == 13) {
