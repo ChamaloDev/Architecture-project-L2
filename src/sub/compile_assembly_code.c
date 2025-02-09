@@ -249,7 +249,7 @@ int compileLine(char *compiledCode, assemblyLine *line) {
     }
     // Instruction (12) rnd x
     if (!(strcmp(line->instruction, "rnd"))) {
-        if (!(hasValidRegistry(line))) return 0;
+        if (!(hasValidConstant(line))) return 0;
         appendToString(compiledCode, getCompiledFormOf(12, stringToShort(line->parameter)));
         return 1;
     }
