@@ -267,10 +267,22 @@ int runProcess(process *process) {
             }
             // Operation (13) "DIVIDE"
             else if (line->parameter == 13) {
+                // Division by zero
+                if (!(*regB)) {
+                    printf("ERROR: DIVISION BY ZERO\n");
+                    printf("       On line %d, cannot divide by zero\n", process->program->pc+1);
+                    return 0;
+                }
                 res  = pushRegistry(process, (*regA) / (*regB));          if (!(res))  return 0;  // (SP-2) = (SP-2) / (SP-1) ; SP++
             }
             // Operation (14) "MODULO"
             else if (line->parameter == 14) {
+                // Division by zero
+                if (!(*regB)) {
+                    printf("ERROR: DIVISION BY ZERO\n");
+                    printf("       On line %d, cannot divide by zero\n", process->program->pc+1);
+                    return 0;
+                }
                 res  = pushRegistry(process, (*regA) % (*regB));          if (!(res))  return 0;  // (SP-2) = (SP-2) % (SP-1) ; SP++
             }
             // Operation (15) "INVERT"

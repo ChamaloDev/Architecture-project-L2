@@ -247,9 +247,15 @@ int compileLine(char *compiledCode, assemblyLine *line) {
         appendToString(compiledCode, getCompiledFormOf(11, value));
         return 1;
     }
-    // Instruction (12) rnd x
+    // Instruction (12) rnd i
     if (!(strcmp(line->instruction, "rnd"))) {
         if (!(hasValidConstant(line))) return 0;
+        int value = stringToShort(line->parameter);
+        if (value <= 0) {
+            printf("ERROR: INVALID PARAMETER\n");
+            printf("       On line %d, intruction \"%s\" needs a strictly positive integer as parameter, got %s instead\n", line->ID, line->instruction, line->parameter);
+            return 0;
+        }
         appendToString(compiledCode, getCompiledFormOf(12, stringToShort(line->parameter)));
         return 1;
     }
