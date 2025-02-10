@@ -298,7 +298,7 @@ int runProcess(process *process) {
         }
         // Instruction (99) halt
         else if (line->instruction == 99) {
-            return 1;                                                                                       // EXIT
+            return 1;                                                                             // EXIT
         }
         // Invalid instruction
         else {
